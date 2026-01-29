@@ -28,6 +28,30 @@ export interface AABB {
 export type ItemCategory = 'weapon' | 'shield' | 'utility' | 'premium' | 'bonus';
 
 /**
+ * Power-up types
+ */
+export type PowerUpType =
+  | 'slow_motion'
+  | 'budget_boost'
+  | 'optimal_hint'
+  | 'time_freeze'
+  | 'score_multiplier'
+  | 'budget_drain'
+  | 'speed_up'
+  | 'slot_lock'
+  | 'point_drain';
+
+/**
+ * Active power-up effect
+ */
+export interface PowerUpEffect {
+  type: PowerUpType;
+  duration: number; // milliseconds remaining
+  value?: number; // optional value for instant effects
+  active: boolean;
+}
+
+/**
  * Falling item entity
  */
 export interface FallingItem extends AABB {
@@ -36,6 +60,8 @@ export interface FallingItem extends AABB {
   cost: number;
   value: number;
   velocityY: number;
+  isPowerUp?: boolean; // true if this is a power-up instead of regular item
+  powerUpType?: PowerUpType; // type of power-up if isPowerUp is true
 }
 
 /**
@@ -62,4 +88,8 @@ export interface GameState {
   round: number;
   score: number;
   status: GameStatus;
+  activePowerUps: PowerUpEffect[];
+  lastScore?: import('./scoreCalculator').ScoreResult;
+  totalScore: number;
+  failReason?: 'bust' | 'timeout';
 }
