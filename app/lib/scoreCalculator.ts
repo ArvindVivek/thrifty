@@ -11,6 +11,12 @@
 
 import { FallingItem, ItemCategory } from './types';
 
+// Scoring constants
+const BASE_SCORE = 500;
+const BUDGET_BONUS_MULTIPLIER = 2;
+const TIME_BONUS_MULTIPLIER = 30;
+const TIMEOUT_SCORE_PER_SLOT = 100;
+
 /**
  * Combo bonus definition
  */
@@ -127,18 +133,18 @@ export function calculateRoundScore(
       timeBonus: 0,
       combos: [],
       multiplier: 1.0,
-      totalScore: filledSlots.length * 100,
+      totalScore: filledSlots.length * TIMEOUT_SCORE_PER_SLOT,
     };
   }
 
   // Calculate base components
-  const baseScore = 500;
+  const baseScore = BASE_SCORE;
   const itemValue = slots
     .filter((slot) => slot !== null)
     .reduce((sum, item) => sum + (item?.value || 0), 0);
-  const budgetBonus = budgetRemaining * 2;
+  const budgetBonus = budgetRemaining * BUDGET_BONUS_MULTIPLIER;
   const secondsRemaining = timeRemaining / 1000;
-  const timeBonus = secondsRemaining * 30;
+  const timeBonus = secondsRemaining * TIME_BONUS_MULTIPLIER;
 
   // Detect combos
   const combos = detectCombos(slots, budgetRemaining, initialBudget, timeRemaining);
@@ -161,6 +167,16 @@ export function calculateRoundScore(
   };
 }
 
+// Rank thresholds (descending order for lookup)
+const RANK_THRESHOLDS = [
+  { threshold: 35000, rank: 'S', title: 'Thrift Master' },
+  { threshold: 30000, rank: 'A', title: 'Budget Boss' },
+  { threshold: 25000, rank: 'B', title: 'Smart Shopper' },
+  { threshold: 20000, rank: 'C', title: 'Bargain Hunter' },
+  { threshold: 15000, rank: 'D', title: 'Penny Pincher' },
+  { threshold: 0, rank: 'F', title: 'Big Spender' },
+];
+
 /**
  * Get rank title for a total score
  *
@@ -168,17 +184,6 @@ export function calculateRoundScore(
  * @returns Rank letter and title
  */
 export function getRankTitle(totalScore: number): { rank: string; title: string } {
-  if (totalScore >= 35000) {
-    return { rank: 'S', title: 'Thrift Master' };
-  } else if (totalScore >= 30000) {
-    return { rank: 'A', title: 'Budget Boss' };
-  } else if (totalScore >= 25000) {
-    return { rank: 'B', title: 'Smart Shopper' };
-  } else if (totalScore >= 20000) {
-    return { rank: 'C', title: 'Bargain Hunter' };
-  } else if (totalScore >= 15000) {
-    return { rank: 'D', title: 'Penny Pincher' };
-  } else {
-    return { rank: 'F', title: 'Big Spender' };
-  }
+  const rankData = RANK_THRESHOLDS.find((r) => totalScore >= r.threshold);
+  return { rank: rankData!.rank, title: rankData!.title };
 }
