@@ -95,6 +95,17 @@ export interface GameState {
 }
 
 /**
+ * Input state interface for game engine to query keyboard/controller state
+ *
+ * This interface allows the game engine to poll input state without
+ * coupling to specific input implementations (keyboard, gamepad, touch).
+ * The useKeyboard hook implements this interface.
+ */
+export interface InputState {
+  isKeyDown: (key: string) => boolean;
+}
+
+/**
  * Game events for UI integration
  */
 export type GameEvent =

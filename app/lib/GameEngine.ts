@@ -7,13 +7,14 @@
  * - Delta time capping to prevent spiral of death
  */
 
-import type { GameState, FallingItem, GameEvent } from './types';
+import type { GameState, FallingItem, GameEvent, InputState } from './types';
 import {
   PHYSICS_DT,
   MAX_FRAME_TIME,
   CANVAS_WIDTH,
   CANVAS_HEIGHT,
   CATCHER_WIDTH,
+  CATCHER_SPEED,
   ROUND_CONFIG,
 } from './constants';
 import { findCollidingItems, isOffScreen } from './collision';
@@ -32,6 +33,7 @@ import type { PowerUpType } from './types';
 
 interface GameEngineOptions {
   initialState: GameState;
+  inputState?: InputState; // Optional for backward compatibility with existing tests
   onStateChange?: (state: GameState) => void;
   onGameEvent?: (event: GameEvent) => void;
 }
@@ -42,6 +44,7 @@ export class GameEngine {
   private lastTime: number = 0;
   private animationFrameId: number | null = null;
   private gameState: GameState;
+  private inputState: InputState | null = null;
   private onStateChange?: (state: GameState) => void;
   private onGameEvent?: (event: GameEvent) => void;
   private running: boolean = false;
@@ -60,6 +63,7 @@ export class GameEngine {
    */
   constructor(options: GameEngineOptions) {
     this.gameState = options.initialState;
+    this.inputState = options.inputState ?? null;
     this.onStateChange = options.onStateChange;
     this.onGameEvent = options.onGameEvent;
   }
@@ -243,6 +247,23 @@ export class GameEngine {
     // Only update physics when game is in playing state
     if (this.gameState.status !== 'playing') {
       return;
+    }
+
+    // ===== Input Processing =====
+    // Read keyboard input and set catcher velocity
+    // Must be done FIRST so velocity is ready for position update
+    if (this.inputState) {
+      const moveLeft = this.inputState.isKeyDown('ArrowLeft');
+      const moveRight = this.inputState.isKeyDown('ArrowRight');
+
+      let velocityX = 0;
+      if (moveLeft && !moveRight) {
+        velocityX = -CATCHER_SPEED;
+      } else if (moveRight && !moveLeft) {
+        velocityX = CATCHER_SPEED;
+      }
+
+      this.gameState.catcher.velocityX = velocityX;
     }
 
     // Increment game time
