@@ -93,3 +93,15 @@ export interface GameState {
   totalScore: number;
   failReason?: 'bust' | 'timeout';
 }
+
+/**
+ * Game events for UI integration
+ */
+export type GameEvent =
+  | { type: 'item_caught'; item: FallingItem; slotIndex: number }
+  | { type: 'power_up_activated'; powerUp: PowerUpType }
+  | { type: 'budget_warning' }
+  | { type: 'round_complete'; score: import('./scoreCalculator').ScoreResult }
+  | { type: 'round_failed'; reason: 'bust' | 'timeout' }
+  | { type: 'combo_achieved'; combo: import('./scoreCalculator').ComboBonus }
+  | { type: 'timer_warning' };

@@ -7,7 +7,7 @@
  * - Delta time capping to prevent spiral of death
  */
 
-import type { GameState, FallingItem } from './types';
+import type { GameState, FallingItem, GameEvent } from './types';
 import {
   PHYSICS_DT,
   MAX_FRAME_TIME,
@@ -33,6 +33,7 @@ import type { PowerUpType } from './types';
 interface GameEngineOptions {
   initialState: GameState;
   onStateChange?: (state: GameState) => void;
+  onGameEvent?: (event: GameEvent) => void;
 }
 
 export class GameEngine {
@@ -42,9 +43,12 @@ export class GameEngine {
   private animationFrameId: number | null = null;
   private gameState: GameState;
   private onStateChange?: (state: GameState) => void;
+  private onGameEvent?: (event: GameEvent) => void;
   private running: boolean = false;
   private itemSpawner: ItemSpawner | null = null;
   private gameTime: number = 0;
+  private budgetWarningEmitted: boolean = false;
+  private timerWarningEmitted: boolean = false;
 
   /**
    * Create a new GameEngine instance
@@ -52,10 +56,12 @@ export class GameEngine {
    * @param options - Configuration options
    * @param options.initialState - Initial game state
    * @param options.onStateChange - Callback invoked after each frame with updated state
+   * @param options.onGameEvent - Callback invoked when game events occur
    */
   constructor(options: GameEngineOptions) {
     this.gameState = options.initialState;
     this.onStateChange = options.onStateChange;
+    this.onGameEvent = options.onGameEvent;
   }
 
   /**
@@ -142,6 +148,10 @@ export class GameEngine {
     // Clear fail reason
     this.gameState.failReason = undefined;
 
+    // Reset warning flags
+    this.budgetWarningEmitted = false;
+    this.timerWarningEmitted = false;
+
     // Set status to playing
     this.gameState.status = 'playing';
   }
@@ -154,6 +164,34 @@ export class GameEngine {
   nextRound(): void {
     this.gameState.round += 1;
     this.startRound(this.gameState.round);
+  }
+
+  /**
+   * Get budget as percentage of initial budget
+   *
+   * @returns Budget percentage (0-100)
+   */
+  getBudgetPercent(): number {
+    const initialBudget = ROUND_CONFIG[this.gameState.round - 1].budget;
+    return (this.gameState.budget / initialBudget) * 100;
+  }
+
+  /**
+   * Get timer in seconds
+   *
+   * @returns Timer value in seconds
+   */
+  getTimerSeconds(): number {
+    return this.gameState.timer / 1000;
+  }
+
+  /**
+   * Get count of filled slots
+   *
+   * @returns Number of filled slots
+   */
+  getFilledSlotCount(): number {
+    return this.gameState.slots.filter((slot) => slot !== null).length;
   }
 
   /**
@@ -266,12 +304,25 @@ export class GameEngine {
       if (item.isPowerUp && item.powerUpType) {
         // Apply power-up effect
         applyPowerUpEffect(this.gameState, item.powerUpType);
+
+        // Emit power-up activated event
+        this.onGameEvent?.({
+          type: 'power_up_activated',
+          powerUp: item.powerUpType,
+        });
       } else {
         // Regular item - check budget and fill slot
         if (this.gameState.budget - item.cost < 0) {
           // Budget bust!
           this.gameState.status = 'round_failed';
           this.gameState.failReason = 'bust';
+
+          // Emit round failed event
+          this.onGameEvent?.({
+            type: 'round_failed',
+            reason: 'bust',
+          });
+
           return; // Stop processing this frame
         }
 
@@ -300,6 +351,13 @@ export class GameEngine {
           }
 
           this.gameState.slots[slotIndex] = item;
+
+          // Emit item caught event
+          this.onGameEvent?.({
+            type: 'item_caught',
+            item,
+            slotIndex,
+          });
         }
       }
     }
@@ -335,7 +393,32 @@ export class GameEngine {
       } else {
         this.gameState.status = 'game_over';
       }
+
+      // Emit round complete event
+      this.onGameEvent?.({
+        type: 'round_complete',
+        score: scoreResult,
+      });
+
+      // Emit combo events
+      for (const combo of scoreResult.combos) {
+        this.onGameEvent?.({
+          type: 'combo_achieved',
+          combo,
+        });
+      }
+
       return; // Stop processing this frame
+    }
+
+    // Check budget warning (20% remaining)
+    const initialBudget = ROUND_CONFIG[this.gameState.round - 1].budget;
+    const budgetPercent = (this.gameState.budget / initialBudget) * 100;
+    if (budgetPercent <= 20 && !this.budgetWarningEmitted) {
+      this.budgetWarningEmitted = true;
+      this.onGameEvent?.({
+        type: 'budget_warning',
+      });
     }
 
     // Decrement timer (unless frozen)
@@ -343,10 +426,17 @@ export class GameEngine {
       this.gameState.timer = Math.max(0, this.gameState.timer - dt);
     }
 
+    // Check timer warning (5 seconds remaining)
+    if (this.gameState.timer <= 5000 && !this.timerWarningEmitted) {
+      this.timerWarningEmitted = true;
+      this.onGameEvent?.({
+        type: 'timer_warning',
+      });
+    }
+
     // Check timeout
     if (this.gameState.timer <= 0 && filledSlots < 5) {
       // Timeout - calculate partial score
-      const initialBudget = ROUND_CONFIG[this.gameState.round - 1].budget;
       const scoreResult = calculateRoundScore(
         this.gameState.slots,
         this.gameState.budget,
@@ -360,6 +450,12 @@ export class GameEngine {
       this.gameState.totalScore += scoreResult.totalScore;
       this.gameState.status = 'round_failed';
       this.gameState.failReason = 'timeout';
+
+      // Emit round failed event
+      this.onGameEvent?.({
+        type: 'round_failed',
+        reason: 'timeout',
+      });
     }
   }
 }
