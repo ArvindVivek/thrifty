@@ -188,15 +188,17 @@ describe('ItemSpawner', () => {
   it('should return null before spawn interval elapsed', () => {
     const spawner = new ItemSpawner(1);
 
-    // First call at time 0
+    // First call at time 0 - spawns immediately
     const item1 = spawner.update(0, 1);
-
-    // Should spawn first item immediately
     expect(item1).not.toBeNull();
 
-    // Call again at time 500ms (before interval)
+    // Call again at time 500ms (before interval) - should not spawn
     const item2 = spawner.update(500, 1);
     expect(item2).toBeNull();
+
+    // Call at time 1200ms (at interval) - should spawn
+    const item3 = spawner.update(1200, 1);
+    expect(item3).not.toBeNull();
   });
 
   it('should spawn item after spawn interval for round 1', () => {

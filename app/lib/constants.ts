@@ -68,13 +68,14 @@ export const ITEM_BASE_SPEED = 150;
  * - budget: Starting budget for the round
  * - duration: Round duration in milliseconds
  * - speedMultiplier: Multiplier applied to ITEM_BASE_SPEED
+ * - spawnInterval: Milliseconds between item spawns
  */
 export const ROUND_CONFIG = [
-  { budget: 1000, duration: 45000, speedMultiplier: 1.0 },
-  { budget: 900, duration: 40000, speedMultiplier: 1.1 },
-  { budget: 800, duration: 35000, speedMultiplier: 1.2 },
-  { budget: 700, duration: 30000, speedMultiplier: 1.3 },
-  { budget: 600, duration: 25000, speedMultiplier: 1.4 },
+  { budget: 4500, duration: 30000, speedMultiplier: 1.0, spawnInterval: 1200 },
+  { budget: 4000, duration: 28000, speedMultiplier: 1.1, spawnInterval: 1000 },
+  { budget: 3500, duration: 26000, speedMultiplier: 1.2, spawnInterval: 900 },
+  { budget: 3000, duration: 24000, speedMultiplier: 1.3, spawnInterval: 800 },
+  { budget: 2500, duration: 22000, speedMultiplier: 1.4, spawnInterval: 700 },
 ] as const;
 
 // ============================================================================
@@ -85,11 +86,22 @@ export const ROUND_CONFIG = [
  * Cost ranges for each item category
  */
 export const ITEM_COSTS = {
-  weapon: { min: 100, max: 250 },
-  shield: { min: 80, max: 200 },
-  utility: { min: 50, max: 150 },
-  premium: { min: 200, max: 400 },
-  bonus: { min: 0, max: 50 },
+  weapon: { min: 500, max: 1500 },
+  shield: { min: 300, max: 800 },
+  utility: { min: 200, max: 600 },
+  premium: { min: 1000, max: 1800 },
+  bonus: { min: 0, max: 100 },
+} as const;
+
+/**
+ * Category multipliers for item value calculation
+ */
+export const CATEGORY_MULTIPLIERS = {
+  weapon: 1.0,
+  shield: 1.1,
+  utility: 1.2,
+  premium: 0.9,
+  bonus: 2.0,
 } as const;
 
 // ============================================================================
