@@ -25,6 +25,7 @@ module.exports = {
       testMatch: [
         '<rootDir>/app/hooks/__tests__/**/*.test.tsx',
         '<rootDir>/app/contexts/__tests__/**/*.test.tsx',
+        '<rootDir>/app/components/__tests__/**/*.test.tsx',
       ],
       testEnvironment: 'jsdom',
       preset: 'ts-jest',
