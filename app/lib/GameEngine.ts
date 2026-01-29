@@ -8,7 +8,27 @@
  */
 
 import type { GameState, FallingItem } from './types';
-import { PHYSICS_DT, MAX_FRAME_TIME } from './constants';
+import {
+  PHYSICS_DT,
+  MAX_FRAME_TIME,
+  CANVAS_WIDTH,
+  CANVAS_HEIGHT,
+  CATCHER_WIDTH,
+  ROUND_CONFIG,
+} from './constants';
+import { findCollidingItems, isOffScreen } from './collision';
+import { ItemSpawner } from './itemSpawner';
+import { calculateRoundScore } from './scoreCalculator';
+import {
+  updatePowerUpEffects,
+  getSpeedMultiplier,
+  isTimeFrozen,
+  applyPowerUpEffect,
+  hasScoreMultiplier,
+  getLockedSlot,
+  POWER_UPS,
+} from './powerUps';
+import type { PowerUpType } from './types';
 
 interface GameEngineOptions {
   initialState: GameState;
@@ -23,6 +43,8 @@ export class GameEngine {
   private gameState: GameState;
   private onStateChange?: (state: GameState) => void;
   private running: boolean = false;
+  private itemSpawner: ItemSpawner | null = null;
+  private gameTime: number = 0;
 
   /**
    * Create a new GameEngine instance
@@ -82,6 +104,59 @@ export class GameEngine {
   }
 
   /**
+   * Start a new round
+   *
+   * Resets all state for the specified round number
+   *
+   * @param roundNumber - Round number (1-5)
+   */
+  startRound(roundNumber: number): void {
+    const roundConfig = ROUND_CONFIG[roundNumber - 1];
+
+    // Reset catcher to center
+    this.gameState.catcher.x = (CANVAS_WIDTH - CATCHER_WIDTH) / 2;
+    this.gameState.catcher.velocityX = 0;
+
+    // Clear items
+    this.gameState.items = [];
+
+    // Reset slots
+    this.gameState.slots = [null, null, null, null, null];
+
+    // Set budget and timer from round config
+    this.gameState.budget = roundConfig.budget;
+    this.gameState.timer = roundConfig.duration;
+
+    // Set round number
+    this.gameState.round = roundNumber;
+
+    // Create new ItemSpawner
+    this.itemSpawner = new ItemSpawner(roundNumber);
+
+    // Reset power-ups
+    this.gameState.activePowerUps = [];
+
+    // Reset game time
+    this.gameTime = 0;
+
+    // Clear fail reason
+    this.gameState.failReason = undefined;
+
+    // Set status to playing
+    this.gameState.status = 'playing';
+  }
+
+  /**
+   * Advance to next round
+   *
+   * Increments round number and starts the new round
+   */
+  nextRound(): void {
+    this.gameState.round += 1;
+    this.startRound(this.gameState.round);
+  }
+
+  /**
    * Main game loop
    *
    * Called by requestAnimationFrame. Implements fixed timestep with accumulator
@@ -120,7 +195,7 @@ export class GameEngine {
    * Update physics simulation
    *
    * Called at fixed PHYSICS_DT intervals (16.67ms for 60 FPS)
-   * Placeholder implementation - will be expanded in Phase 2
+   * Implements full game loop with collision, spawning, scoring, and power-ups
    *
    * @param dt - Fixed timestep in milliseconds
    */
@@ -132,31 +207,159 @@ export class GameEngine {
       return;
     }
 
+    // Increment game time
+    this.gameTime += dt;
+
+    // ===== a) Update power-up durations =====
+    this.gameState.activePowerUps = updatePowerUpEffects(this.gameState.activePowerUps, dt);
+    const speedMultiplier = getSpeedMultiplier(this.gameState.activePowerUps);
+    const timeFrozen = isTimeFrozen(this.gameState.activePowerUps);
+
+    // ===== b) Spawn items =====
+    if (this.itemSpawner) {
+      const newItem = this.itemSpawner.update(this.gameTime, this.gameState.round);
+
+      if (newItem) {
+        // 26% chance to spawn power-up instead of regular item
+        if (Math.random() < 0.26) {
+          // Select random power-up weighted by drop rates
+          const powerUpTypes = Object.keys(POWER_UPS) as PowerUpType[];
+          const weights = powerUpTypes.map((type) => POWER_UPS[type].dropRate);
+          const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+
+          let random = Math.random() * totalWeight;
+          let selectedPowerUp: PowerUpType = 'slow_motion';
+
+          for (let i = 0; i < powerUpTypes.length; i++) {
+            random -= weights[i];
+            if (random <= 0) {
+              selectedPowerUp = powerUpTypes[i];
+              break;
+            }
+          }
+
+          // Convert regular item to power-up
+          newItem.isPowerUp = true;
+          newItem.powerUpType = selectedPowerUp;
+        }
+
+        this.gameState.items.push(newItem);
+      }
+    }
+
+    // ===== c) Update item positions =====
+    for (const item of this.gameState.items) {
+      item.y += item.velocityY * speedMultiplier * dtSeconds;
+    }
+
     // Update catcher position based on velocity
-    // (Input handling will be added in Phase 4)
     const catcher = this.gameState.catcher;
     catcher.x += catcher.velocityX * dtSeconds;
 
-    // TODO (Phase 2): Add catcher bounds clamping
-    // TODO (Phase 2): Add screen edge collision
+    // Clamp catcher to screen bounds
+    catcher.x = Math.max(0, Math.min(CANVAS_WIDTH - CATCHER_WIDTH, catcher.x));
 
-    // Update falling item positions
-    this.gameState.items = this.gameState.items.map((item) => {
-      return {
-        ...item,
-        y: item.y + item.velocityY * dtSeconds,
-      };
-    });
+    // ===== d) Check collisions =====
+    const collidingItems = findCollidingItems(catcher, this.gameState.items);
 
-    // TODO (Phase 2): Add item collision detection with catcher
-    // TODO (Phase 2): Add item removal when off-screen
-    // TODO (Phase 2): Add slot filling logic
+    for (const item of collidingItems) {
+      if (item.isPowerUp && item.powerUpType) {
+        // Apply power-up effect
+        applyPowerUpEffect(this.gameState, item.powerUpType);
+      } else {
+        // Regular item - check budget and fill slot
+        if (this.gameState.budget - item.cost < 0) {
+          // Budget bust!
+          this.gameState.status = 'round_failed';
+          this.gameState.failReason = 'bust';
+          return; // Stop processing this frame
+        }
 
-    // Decrement timer
-    this.gameState.timer = Math.max(0, this.gameState.timer - dt);
+        // Deduct cost
+        this.gameState.budget -= item.cost;
 
-    // TODO (Phase 2): Add timer expiration handling
-    // TODO (Phase 2): Add round completion logic
-    // TODO (Phase 2): Add game over conditions
+        // Find first empty slot
+        const lockedSlot = getLockedSlot(this.gameState.activePowerUps);
+        let slotIndex = -1;
+
+        for (let i = 0; i < this.gameState.slots.length; i++) {
+          if (this.gameState.slots[i] === null && i !== lockedSlot) {
+            slotIndex = i;
+            break;
+          }
+        }
+
+        if (slotIndex !== -1) {
+          // Apply score multiplier if active
+          if (hasScoreMultiplier(this.gameState.activePowerUps)) {
+            item.value *= 2;
+            // Remove score multiplier effect (one-time use)
+            this.gameState.activePowerUps = this.gameState.activePowerUps.filter(
+              (effect) => effect.type !== 'score_multiplier'
+            );
+          }
+
+          this.gameState.slots[slotIndex] = item;
+        }
+      }
+    }
+
+    // Remove caught items from items array
+    const caughtIds = new Set(collidingItems.map((item) => item.id));
+    this.gameState.items = this.gameState.items.filter((item) => !caughtIds.has(item.id));
+
+    // ===== e) Remove off-screen items =====
+    this.gameState.items = this.gameState.items.filter(
+      (item) => !isOffScreen(item, CANVAS_HEIGHT)
+    );
+
+    // ===== f) Check win/fail conditions =====
+    const filledSlots = this.gameState.slots.filter((slot) => slot !== null).length;
+
+    if (filledSlots === 5) {
+      // All slots filled - round complete!
+      const initialBudget = ROUND_CONFIG[this.gameState.round - 1].budget;
+      const scoreResult = calculateRoundScore(
+        this.gameState.slots,
+        this.gameState.budget,
+        initialBudget,
+        this.gameState.timer,
+        this.gameState.round
+      );
+
+      this.gameState.lastScore = scoreResult;
+      this.gameState.totalScore += scoreResult.totalScore;
+
+      if (this.gameState.round < 5) {
+        this.gameState.status = 'round_complete';
+      } else {
+        this.gameState.status = 'game_over';
+      }
+      return; // Stop processing this frame
+    }
+
+    // Decrement timer (unless frozen)
+    if (!timeFrozen) {
+      this.gameState.timer = Math.max(0, this.gameState.timer - dt);
+    }
+
+    // Check timeout
+    if (this.gameState.timer <= 0 && filledSlots < 5) {
+      // Timeout - calculate partial score
+      const initialBudget = ROUND_CONFIG[this.gameState.round - 1].budget;
+      const scoreResult = calculateRoundScore(
+        this.gameState.slots,
+        this.gameState.budget,
+        initialBudget,
+        this.gameState.timer,
+        this.gameState.round,
+        'timeout'
+      );
+
+      this.gameState.lastScore = scoreResult;
+      this.gameState.totalScore += scoreResult.totalScore;
+      this.gameState.status = 'round_failed';
+      this.gameState.failReason = 'timeout';
+    }
   }
 }
