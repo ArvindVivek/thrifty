@@ -21,6 +21,18 @@ jest.mock('@/app/contexts/GameContext', () => ({
   useGame: jest.fn(),
 }));
 
+// Mock getRankTitle function
+jest.mock('@/app/lib/scoreCalculator', () => ({
+  getRankTitle: jest.fn((score: number) => {
+    if (score >= 35000) return { rank: 'Legend', title: 'Thrifty Legend' };
+    if (score >= 30000) return { rank: 'Pro', title: 'Thrifty Pro' };
+    if (score >= 25000) return { rank: 'Expert', title: 'Thrifty Expert' };
+    if (score >= 20000) return { rank: 'Skilled', title: 'Thrifty Skilled' };
+    if (score >= 15000) return { rank: 'Adept', title: 'Thrifty Adept' };
+    return { rank: 'Rookie', title: 'Thrifty Rookie' };
+  }),
+}));
+
 const mockUseGame = useGame as jest.MockedFunction<typeof useGame>;
 
 // Helper to create mock game state
@@ -103,7 +115,7 @@ describe('GameContainer', () => {
           totalScore: 1500,
           items: [{} as any, {} as any, {} as any],
           slots: [{} as any, {} as any, null, null, null],
-          activePowerUps: [{ type: 'slow_motion', remainingMs: 5000 } as PowerUpEffect],
+          activePowerUps: [{ type: 'slow_motion', duration: 5000, active: true } as PowerUpEffect],
         }),
       });
 
@@ -229,10 +241,12 @@ describe('GameContainer', () => {
           totalScore: 25000,
           lastScore: {
             baseScore: 20000,
+            itemValue: 15000,
+            budgetBonus: 2500,
+            timeBonus: 2500,
             combos: [],
-            comboMultiplier: 1.25,
+            multiplier: 1.25,
             totalScore: 25000,
-            rank: 'Pro',
           },
         }),
       });
@@ -241,7 +255,7 @@ describe('GameContainer', () => {
 
       expect(screen.getByText('Game Over!')).toBeInTheDocument();
       expect(screen.getByText('Final Score: 25,000')).toBeInTheDocument();
-      expect(screen.getByText('Rank: Pro')).toBeInTheDocument();
+      expect(screen.getByText('Rank: Expert')).toBeInTheDocument();
       expect(screen.getByText('Play Again')).toBeInTheDocument();
     });
 

@@ -15,6 +15,7 @@
  */
 
 import { useGame } from '@/app/contexts/GameContext';
+import { getRankTitle } from '@/app/lib/scoreCalculator';
 
 /**
  * GameContainer component
@@ -121,11 +122,9 @@ export function GameContainer() {
       <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
         <h2 className="text-3xl font-bold mb-4 text-yellow-500">Game Over!</h2>
         <p className="text-xl mb-2">Final Score: {totalScore.toLocaleString()}</p>
-        {gameState.lastScore && (
-          <p className="text-lg text-gray-400 mb-8">
-            Rank: {gameState.lastScore.rank}
-          </p>
-        )}
+        <p className="text-lg text-gray-400 mb-8">
+          Rank: {getRankTitle(totalScore).rank}
+        </p>
         <button
           onClick={() => engine.startRound(1)}
           className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-bold transition-colors"
