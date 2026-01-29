@@ -12,6 +12,14 @@ import { useGameEngine, UseGameEngineOptions } from '../useGameEngine';
 import { GameEngine } from '@/app/lib/GameEngine';
 import type { GameState, GameEvent } from '@/app/lib/types';
 
+// Mock useKeyboard - must be before GameEngine mock since both are imported
+const mockIsKeyDown = jest.fn(() => false);
+jest.mock('../useKeyboard', () => ({
+  useKeyboard: jest.fn(() => ({
+    isKeyDown: mockIsKeyDown,
+  })),
+}));
+
 // Mock GameEngine
 jest.mock('@/app/lib/GameEngine', () => {
   return {
@@ -93,11 +101,16 @@ describe('useGameEngine', () => {
         })
       );
 
-      expect(GameEngine).toHaveBeenCalledWith({
-        initialState,
-        onStateChange: expect.any(Function),
-        onGameEvent,
-      });
+      expect(GameEngine).toHaveBeenCalledWith(
+        expect.objectContaining({
+          initialState,
+          onStateChange: expect.any(Function),
+          onGameEvent,
+          inputState: expect.objectContaining({
+            isKeyDown: expect.any(Function),
+          }),
+        })
+      );
     });
   });
 
@@ -257,6 +270,27 @@ describe('useGameEngine', () => {
       mockEngine._onGameEvent(event);
 
       expect(onGameEvent).toHaveBeenCalledWith(event);
+    });
+  });
+
+  describe('keyboard integration', () => {
+    it('should pass keyboard state to GameEngine as inputState', () => {
+      const { result } = renderHook(() =>
+        useGameEngine({
+          initialState: createInitialState(),
+        })
+      );
+
+      // Engine should have been created with inputState
+      expect(result.current.engine).toBeDefined();
+      // Verify GameEngine was called with inputState parameter
+      expect(GameEngine).toHaveBeenCalledWith(
+        expect.objectContaining({
+          inputState: expect.objectContaining({
+            isKeyDown: expect.any(Function),
+          }),
+        })
+      );
     });
   });
 });

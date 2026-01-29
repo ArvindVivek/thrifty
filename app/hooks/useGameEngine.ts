@@ -12,6 +12,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { GameEngine } from '@/app/lib/GameEngine';
 import type { GameState, GameEvent } from '@/app/lib/types';
+import { useKeyboard } from './useKeyboard';
 
 /**
  * Options for useGameEngine hook
@@ -56,6 +57,9 @@ export interface UseGameEngineReturn {
 export function useGameEngine(options: UseGameEngineOptions): UseGameEngineReturn {
   const { initialState, onGameEvent } = options;
 
+  // Get keyboard state (stable reference, no re-renders)
+  const keyboardState = useKeyboard();
+
   // Store engine in ref - NEVER in useState (causes 60 FPS re-renders)
   const engineRef = useRef<GameEngine | null>(null);
 
@@ -66,6 +70,7 @@ export function useGameEngine(options: UseGameEngineOptions): UseGameEngineRetur
   if (engineRef.current === null) {
     engineRef.current = new GameEngine({
       initialState,
+      inputState: keyboardState,
       onStateChange: setGameState,
       onGameEvent,
     });
