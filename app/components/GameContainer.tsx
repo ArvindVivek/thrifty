@@ -57,6 +57,7 @@ export function GameContainer() {
   // Playing screen with debug display
   if (status === 'playing') {
     const filledSlots = slots.filter((s) => s !== null).length;
+    const { catcher } = gameState;
 
     return (
       <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center">
@@ -73,6 +74,13 @@ export function GameContainer() {
           <div>Filled slots: {filledSlots}/5</div>
           <div>Active power-ups: {activePowerUps.length}</div>
           <div>Engine running: {engine.isRunning() ? 'Yes' : 'No'}</div>
+          <div className="border-t border-gray-700 pt-2 mt-2">
+            <div className="text-yellow-400">Catcher X: {Math.round(catcher.x)}px</div>
+            <div className="text-yellow-400">Velocity: {catcher.velocityX}</div>
+          </div>
+          <div className="text-xs text-gray-500 mt-2">
+            Press ← → arrow keys to move catcher
+          </div>
         </div>
       </div>
     );

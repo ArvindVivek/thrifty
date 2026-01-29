@@ -227,7 +227,9 @@ export class GameEngine {
     }
 
     // Notify React of state changes (for rendering)
-    this.onStateChange?.(this.gameState);
+    // IMPORTANT: Spread to create new object reference - React useState
+    // uses referential equality, so same object won't trigger re-render
+    this.onStateChange?.({ ...this.gameState });
 
     // Schedule next frame
     this.animationFrameId = requestAnimationFrame(this.loop);
