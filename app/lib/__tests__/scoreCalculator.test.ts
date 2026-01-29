@@ -36,15 +36,15 @@ describe('scoreCalculator', () => {
   describe('calculateRoundScore - Base Scoring', () => {
     it('should calculate base score of 500 for empty slots', () => {
       const slots: (FallingItem | null)[] = [null, null, null, null, null];
-      const result = calculateRoundScore(slots, 1000, 1000, 45000, 1);
+      const result = calculateRoundScore(slots, 400, 1000, 10000, 1); // 40% budget, 10s time (no combos)
 
       expect(result.baseScore).toBe(500);
       expect(result.itemValue).toBe(0);
-      expect(result.budgetBonus).toBe(2000); // 1000 * 2
-      expect(result.timeBonus).toBe(1350000); // 45000ms = 45s * 30
+      expect(result.budgetBonus).toBe(800); // 400 * 2
+      expect(result.timeBonus).toBe(300); // 10s * 30
       expect(result.combos).toHaveLength(0);
       expect(result.multiplier).toBe(1.0);
-      expect(result.totalScore).toBe(500 + 0 + 2000 + 1350000);
+      expect(result.totalScore).toBe(500 + 0 + 800 + 300);
     });
 
     it('should calculate item values correctly', () => {
@@ -186,7 +186,7 @@ describe('scoreCalculator', () => {
         null,
         null,
       ];
-      const result = calculateRoundScore(slots, 500, 1000, 0, 1);
+      const result = calculateRoundScore(slots, 400, 1000, 0, 1); // 40% budget (below 50% threshold)
 
       expect(result.combos).toContainEqual({
         name: 'Balanced Loadout',
@@ -203,7 +203,7 @@ describe('scoreCalculator', () => {
         createMockItem('4', 'weapon', 100, 250),
         null,
       ];
-      const result = calculateRoundScore(slots, 500, 1000, 0, 1);
+      const result = calculateRoundScore(slots, 400, 1000, 0, 1); // 40% budget (below 50% threshold)
 
       expect(result.combos).toContainEqual({
         name: 'Specialist',
