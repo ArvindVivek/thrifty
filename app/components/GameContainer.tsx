@@ -14,8 +14,9 @@
  * screen state needed. This keeps React state minimal.
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGame } from '@/app/contexts/GameContext';
+import { useJunieContext } from '@/app/contexts/JunieContext';
 import { getRankTitle } from '@/app/lib/scoreCalculator';
 import {
   TitleScreen,
@@ -25,6 +26,7 @@ import {
   RoundFailScreen,
   GameOverScreen,
 } from './screens';
+import { Junie } from './mascot';
 import { ROUND_CONFIG } from '@/app/lib/constants';
 
 /**
@@ -46,9 +48,33 @@ export function GameContainer() {
     activePowerUps,
     lastScore,
     failReason,
+    catcher,
   } = gameState;
 
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const { reaction, triggerRoundStart, triggerFourSlots, triggerGameOver } = useJunieContext();
+
+  // Track slots for 4-slots-filled reaction
+  const prevSlotsFilledRef = useRef(0);
+  useEffect(() => {
+    const currentFilled = slots.filter(s => s !== null).length;
+    if (currentFilled === 4 && prevSlotsFilledRef.current < 4) {
+      triggerFourSlots();
+    }
+    prevSlotsFilledRef.current = currentFilled;
+  }, [slots, triggerFourSlots]);
+
+  // Trigger round start when game starts
+  const prevStatusRef = useRef(status);
+  useEffect(() => {
+    if (status === 'playing' && prevStatusRef.current !== 'playing') {
+      triggerRoundStart();
+    }
+    if (status === 'game_over' && prevStatusRef.current !== 'game_over') {
+      triggerGameOver(totalScore);
+    }
+    prevStatusRef.current = status;
+  }, [status, triggerRoundStart, triggerGameOver, totalScore]);
 
   // HowToPlay intercept (before menu)
   if (status === 'menu' && showHowToPlay) {
@@ -72,59 +98,70 @@ export function GameContainer() {
     );
   }
 
-  // Playing screen
+  // Playing screen - includes Junie
   if (status === 'playing') {
-    // Extract catcherX from gameState (rounds are 1-indexed, array is 0-indexed)
-    const catcherX = gameState.catcher.x;
+    const catcherX = catcher.x;
     const config = ROUND_CONFIG[round - 1];
     return (
-      <GameplayScreen
-        round={round}
-        budget={budget}
-        maxBudget={config.budget}
-        timer={timer}
-        maxTime={config.duration}
-        slots={slots}
-        activePowerUps={activePowerUps}
-        catcherX={catcherX}
-        items={items}
-      />
+      <>
+        <GameplayScreen
+          round={round}
+          budget={budget}
+          maxBudget={config.budget}
+          timer={timer}
+          maxTime={config.duration}
+          slots={slots}
+          activePowerUps={activePowerUps}
+          catcherX={catcherX}
+          items={items}
+        />
+        <Junie reaction={reaction} />
+      </>
     );
   }
 
-  // Round complete screen
+  // Round complete screen - includes Junie
   if (status === 'round_complete') {
     return (
-      <RoundCompleteScreen
-        round={round}
-        score={lastScore!}
-        totalScore={totalScore}
-        onNextRound={() => engine.nextRound()}
-      />
+      <>
+        <RoundCompleteScreen
+          round={round}
+          score={lastScore!}
+          totalScore={totalScore}
+          onNextRound={() => engine.nextRound()}
+        />
+        <Junie reaction={reaction} />
+      </>
     );
   }
 
-  // Round failed screen
+  // Round failed screen - includes Junie
   if (status === 'round_failed') {
     const slotsFilledCount = slots.filter(s => s !== null).length;
     return (
-      <RoundFailScreen
-        round={round}
-        failReason={failReason || 'timeout'}
-        slotsFilledCount={slotsFilledCount}
-        onRetry={() => engine.startRound(round)}
-      />
+      <>
+        <RoundFailScreen
+          round={round}
+          failReason={failReason || 'timeout'}
+          slotsFilledCount={slotsFilledCount}
+          onRetry={() => engine.startRound(round)}
+        />
+        <Junie reaction={reaction} />
+      </>
     );
   }
 
-  // Game over screen
+  // Game over screen - includes Junie
   if (status === 'game_over') {
     return (
-      <GameOverScreen
-        totalScore={totalScore}
-        onPlayAgain={() => engine.startRound(1)}
-        onLeaderboard={() => {}} // Placeholder for Phase 8
-      />
+      <>
+        <GameOverScreen
+          totalScore={totalScore}
+          onPlayAgain={() => engine.startRound(1)}
+          onLeaderboard={() => {}} // Placeholder for Phase 8
+        />
+        <Junie reaction={reaction} />
+      </>
     );
   }
 
