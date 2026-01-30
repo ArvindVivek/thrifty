@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { GameArea, SlotIndicator } from '../game';
 import { ScreenShake } from '../effects';
-import { getLockedSlot } from '@/app/lib/powerUps';
+import { getLockedSlot, isTimeFrozen } from '@/app/lib/powerUps';
 
 interface GameplayScreenProps {
   round: number;
@@ -50,6 +50,7 @@ export function GameplayScreen({
   const budgetPercent = (budget / maxBudget) * 100;
   const timerPercent = (timer / maxTime) * 100;
   const lockedSlot = getLockedSlot(activePowerUps);
+  const timeFrozen = isTimeFrozen(activePowerUps);
 
   // Track budget changes for animation
   const [displayBudget, setDisplayBudget] = useState(budget);
@@ -88,8 +89,12 @@ export function GameplayScreen({
     ? 'text-yellow-500'
     : 'text-red-500';
 
-  // Timer color when low
-  const timerColor = timerSeconds <= 5 ? 'text-red-500' : 'text-white';
+  // Timer color: frozen (cyan), low (red), normal (white)
+  const timerColor = timeFrozen
+    ? 'text-cyan-400'
+    : timerSeconds <= 5
+    ? 'text-red-500'
+    : 'text-white';
 
   return (
     <ScreenShake active={shaking} intensity={4} duration={200}>
@@ -146,9 +151,19 @@ export function GameplayScreen({
                     <span className="text-sm text-gray-400">Time</span>
                     <motion.span
                       className={`font-mono font-bold ${timerColor}`}
-                      animate={timerSeconds <= 5 ? { scale: [1, 1.1, 1] } : {}}
-                      transition={{ duration: 0.5, repeat: timerSeconds <= 5 ? Infinity : 0 }}
+                      animate={
+                        timeFrozen
+                          ? { scale: [1, 1.15, 1], opacity: [1, 0.7, 1] }
+                          : timerSeconds <= 5
+                          ? { scale: [1, 1.1, 1] }
+                          : {}
+                      }
+                      transition={{
+                        duration: timeFrozen ? 0.6 : 0.5,
+                        repeat: timeFrozen || timerSeconds <= 5 ? Infinity : 0,
+                      }}
                     >
+                      {timeFrozen && '⏸️ '}
                       {timerSeconds}s
                     </motion.span>
                   </div>

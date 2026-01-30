@@ -12,6 +12,7 @@ import { JunieProvider, useJunieContext } from '@/app/contexts/JunieContext';
 import { GameContainer } from '@/app/components/GameContainer';
 import { Toaster } from 'sonner';
 import { showComboToasts } from '@/app/components/effects';
+import { showPowerUpToast } from '@/app/components/ui/PowerUpToast';
 import { GameEvent } from '@/app/lib/types';
 
 function GameWithEvents() {
@@ -19,8 +20,13 @@ function GameWithEvents() {
 
   const onGameEvent = (event: GameEvent) => {
     handleGameEvent(event);
+
     if (event.type === 'round_complete' && event.score.combos.length > 0) {
       showComboToasts(event.score.combos);
+    }
+
+    if (event.type === 'power_up_activated') {
+      showPowerUpToast(event.powerUp);
     }
   };
 
