@@ -30,6 +30,7 @@ const POWER_UP_ICONS = {
 
 interface FallingItemProps {
   item: FallingItemType;
+  highlighted?: boolean;
 }
 
 /**
@@ -37,7 +38,7 @@ interface FallingItemProps {
  * Uses CSS transform (translate3d) for GPU-accelerated positioning.
  * Memoized to prevent unnecessary re-renders during game loop.
  */
-export const FallingItem = memo(function FallingItem({ item }: FallingItemProps) {
+export const FallingItem = memo(function FallingItem({ item, highlighted = false }: FallingItemProps) {
   const bgColor = CATEGORY_COLORS[item.category];
   const isPowerUp = item.isPowerUp ?? false;
   const powerUpIcon = isPowerUp && item.powerUpType ? POWER_UP_ICONS[item.powerUpType] : null;
@@ -46,7 +47,7 @@ export const FallingItem = memo(function FallingItem({ item }: FallingItemProps)
     <div
       className={`absolute flex items-center justify-center rounded-lg ${bgColor} ${
         isPowerUp ? 'animate-pulse ring-2 ring-white' : ''
-      }`}
+      } ${highlighted ? 'ring-4 ring-yellow-400 ring-opacity-100 shadow-lg shadow-yellow-400/50' : ''}`}
       style={{
         transform: `translate3d(${item.x}px, ${item.y}px, 0)`,
         width: item.width,
@@ -54,6 +55,9 @@ export const FallingItem = memo(function FallingItem({ item }: FallingItemProps)
         contain: 'layout style paint',
       }}
     >
+      {highlighted && (
+        <span className="absolute -top-2 -right-2 text-xl animate-bounce">⭐</span>
+      )}
       {isPowerUp && powerUpIcon ? (
         <span className="text-2xl">{powerUpIcon}</span>
       ) : (

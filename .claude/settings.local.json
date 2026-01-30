@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /Users/arvind/Documents/Hackathons/Cloud9\\\\ x\\\\ JetBrains\\\\ 2026/thrifty:*)",
+      "Bash(/opt/homebrew/bin/node:*)",
+      "Bash(cd:*)",
+      "Bash(test:*)",
+      "Bash(cd /Users/arvind/Documents/Hackathons/Cloud9\\\\ x\\\\ JetBrains\\\\ 2026/thrifty &&:*)",
+      "Bash(cd /Users/arvind/Documents/Hackathons/Cloud9\\\\ x\\\\ JetBrains\\\\ 2026/thrifty && PATH=/usr/local/n/versions/node/18.16.1/bin:$PATH npm run build:*)",
+      "Bash(npm run build:*)",
+      "Bash(export PATH:*)",
+      "Bash(npx supabase:*)"
+    ]
+  }
+}

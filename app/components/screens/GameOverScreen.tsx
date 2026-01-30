@@ -68,6 +68,13 @@ export function GameOverScreen({
 
     if (!name.trim() || submitted) return;
 
+    // Check for profanity BEFORE submitting
+    const filter = new (await import('bad-words')).Filter();
+    if (filter.isProfane(name)) {
+      setSubmitError("Please choose an appropriate name");
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
 

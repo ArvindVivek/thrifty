@@ -3,6 +3,7 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/app/lib/constants';
 import { FallingItem } from './FallingItem';
 import { Catcher } from './Catcher';
 import { PowerUpTint } from '../effects';
+import { hasOptimalHint } from '@/app/lib/powerUps';
 
 interface GameAreaProps {
   items: FallingItemType[];
@@ -16,6 +17,8 @@ interface GameAreaProps {
  * CSS containment isolates game rendering from HUD recalculations.
  */
 export function GameArea({ items, catcherX, activePowerUps }: GameAreaProps) {
+  const hintActive = hasOptimalHint(activePowerUps);
+
   return (
     <div
       className="relative overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg border border-gray-700"
@@ -30,7 +33,11 @@ export function GameArea({ items, catcherX, activePowerUps }: GameAreaProps) {
 
       {/* Falling items */}
       {items.map((item) => (
-        <FallingItem key={item.id} item={item} />
+        <FallingItem
+          key={item.id}
+          item={item}
+          highlighted={hintActive && !item.isPowerUp && item.value >= 150}
+        />
       ))}
 
       {/* Player catcher */}

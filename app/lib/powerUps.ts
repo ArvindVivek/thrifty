@@ -115,12 +115,28 @@ export function applyPowerUpEffect(state: GameState, powerUpType: PowerUpType): 
       state.totalScore = Math.max(0, state.totalScore - 200);
       break;
 
+    case 'slot_lock':
+      // Lock a random empty slot
+      const emptySlots = state.slots
+        .map((slot, index) => (slot === null ? index : -1))
+        .filter(index => index !== -1);
+
+      if (emptySlots.length > 0) {
+        const randomSlot = emptySlots[Math.floor(Math.random() * emptySlots.length)];
+        state.activePowerUps.push({
+          type: powerUpType,
+          duration: powerUp.duration,
+          active: true,
+          value: randomSlot,
+        });
+      }
+      break;
+
     case 'slow_motion':
     case 'speed_up':
     case 'optimal_hint':
     case 'time_freeze':
     case 'score_multiplier':
-    case 'slot_lock':
       // Duration-based effects: add to active effects
       state.activePowerUps.push({
         type: powerUpType,
@@ -205,4 +221,14 @@ export function hasScoreMultiplier(effects: PowerUpEffect[]): boolean {
 export function getLockedSlot(effects: PowerUpEffect[]): number {
   const slotLock = effects.find((effect) => effect.type === 'slot_lock');
   return slotLock ? (slotLock.value ?? -1) : -1;
+}
+
+/**
+ * Check if optimal hint is active
+ *
+ * @param effects - Array of active power-up effects
+ * @returns True if hint should highlight valuable items
+ */
+export function hasOptimalHint(effects: PowerUpEffect[]): boolean {
+  return effects.some((effect) => effect.type === 'optimal_hint');
 }

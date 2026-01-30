@@ -8,6 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { GameArea, SlotIndicator } from '../game';
 import { ScreenShake } from '../effects';
+import { getLockedSlot } from '@/app/lib/powerUps';
 
 interface GameplayScreenProps {
   round: number;
@@ -48,6 +49,7 @@ export function GameplayScreen({
   const timerSeconds = Math.ceil(timer / 1000);
   const budgetPercent = (budget / maxBudget) * 100;
   const timerPercent = (timer / maxTime) * 100;
+  const lockedSlot = getLockedSlot(activePowerUps);
 
   // Track budget changes for animation
   const [displayBudget, setDisplayBudget] = useState(budget);
@@ -178,7 +180,12 @@ export function GameplayScreen({
                   <h3 className="text-sm font-semibold text-gray-400 mb-3">Equipment</h3>
                   <div className="flex gap-2 flex-wrap">
                     {slots.map((slot, index) => (
-                      <SlotIndicator key={index} slot={slot} index={index} />
+                      <SlotIndicator
+                        key={index}
+                        slot={slot}
+                        index={index}
+                        locked={lockedSlot === index}
+                      />
                     ))}
                   </div>
                 </CardContent>

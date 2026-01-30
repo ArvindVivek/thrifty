@@ -37,6 +37,7 @@ export function useLeaderboard(limit = 100): UseLeaderboardReturn {
 
       const supabase = createBrowserClient();
       const { data, error: fetchError } = await supabase
+        .schema('thrifty')
         .from('leaderboard')
         .select('*')
         .order('score', { ascending: false })
@@ -112,6 +113,7 @@ export function useLeaderboard(limit = 100): UseLeaderboardReturn {
     try {
       const supabase = createBrowserClient();
       const { data, error: insertError } = await supabase
+        .schema('thrifty')
         .from('leaderboard')
         .insert({ name: cleanName, score })
         .select()
