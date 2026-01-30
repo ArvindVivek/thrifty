@@ -13,7 +13,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { createBrowserClient } from '@/app/lib/supabase/client';
 import { LeaderboardEntry } from '@/app/lib/types';
-import Filter from 'bad-words';
+import { Filter } from 'bad-words';
 
 interface UseLeaderboardReturn {
   entries: LeaderboardEntry[];
