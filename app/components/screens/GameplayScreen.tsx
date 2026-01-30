@@ -94,7 +94,7 @@ export function GameplayScreen({
 
       {/* Game Area */}
       <div className="flex-1 relative flex items-center justify-center">
-        <GameArea items={items} catcherX={catcherX} />
+        <GameArea items={items} catcherX={catcherX} activePowerUps={activePowerUps} />
       </div>
 
       {/* Bottom HUD - Slot Indicators */}

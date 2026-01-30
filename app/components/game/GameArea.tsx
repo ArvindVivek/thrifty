@@ -1,11 +1,13 @@
-import { FallingItem as FallingItemType } from '@/app/lib/types';
+import { FallingItem as FallingItemType, PowerUpEffect } from '@/app/lib/types';
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/app/lib/constants';
 import { FallingItem } from './FallingItem';
 import { Catcher } from './Catcher';
+import { PowerUpTint } from '../effects';
 
 interface GameAreaProps {
   items: FallingItemType[];
   catcherX: number;
+  activePowerUps: PowerUpEffect[];
 }
 
 /**
@@ -13,7 +15,7 @@ interface GameAreaProps {
  * Uses fixed dimensions from constants and contains all game rendering elements.
  * CSS containment isolates game rendering from HUD recalculations.
  */
-export function GameArea({ items, catcherX }: GameAreaProps) {
+export function GameArea({ items, catcherX, activePowerUps }: GameAreaProps) {
   return (
     <div
       className="relative overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 rounded-lg border border-gray-700"
@@ -23,6 +25,9 @@ export function GameArea({ items, catcherX }: GameAreaProps) {
         contain: 'content',
       }}
     >
+      {/* Power-up tint overlay */}
+      <PowerUpTint activePowerUps={activePowerUps} />
+
       {/* Falling items */}
       {items.map((item) => (
         <FallingItem key={item.id} item={item} />
