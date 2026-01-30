@@ -25,6 +25,7 @@ import {
   RoundCompleteScreen,
   RoundFailScreen,
   GameOverScreen,
+  LeaderboardScreen,
 } from './screens';
 import { Junie } from './mascot';
 import { ROUND_CONFIG } from '@/app/lib/constants';
@@ -52,7 +53,22 @@ export function GameContainer() {
   } = gameState;
 
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [submittedEntryId, setSubmittedEntryId] = useState<string | null>(null);
   const { reaction, triggerRoundStart, triggerFourSlots, triggerGameOver } = useJunieContext();
+
+  // Leaderboard navigation handlers
+  const handleShowLeaderboard = () => {
+    setShowLeaderboard(true);
+  };
+
+  const handleBackFromLeaderboard = () => {
+    setShowLeaderboard(false);
+  };
+
+  const handleScoreSubmitted = (entryId: string) => {
+    setSubmittedEntryId(entryId);
+  };
 
   // Track slots for 4-slots-filled reaction
   const prevSlotsFilledRef = useRef(0);
@@ -76,6 +92,16 @@ export function GameContainer() {
     prevStatusRef.current = status;
   }, [status, triggerRoundStart, triggerGameOver, totalScore]);
 
+  // Leaderboard overlay - can be shown from any game state
+  if (showLeaderboard) {
+    return (
+      <LeaderboardScreen
+        onBack={handleBackFromLeaderboard}
+        highlightEntryId={submittedEntryId}
+      />
+    );
+  }
+
   // HowToPlay intercept (before menu)
   if (status === 'menu' && showHowToPlay) {
     return (
@@ -93,7 +119,7 @@ export function GameContainer() {
     return (
       <TitleScreen
         onStart={() => setShowHowToPlay(true)}
-        onLeaderboard={() => {}} // Placeholder for Phase 8
+        onLeaderboard={handleShowLeaderboard}
       />
     );
   }
@@ -157,8 +183,12 @@ export function GameContainer() {
       <>
         <GameOverScreen
           totalScore={totalScore}
-          onPlayAgain={() => engine.startRound(1)}
-          onLeaderboard={() => {}} // Placeholder for Phase 8
+          onPlayAgain={() => {
+            setSubmittedEntryId(null); // Clear highlighting for new game
+            engine.startRound(1);
+          }}
+          onLeaderboard={handleShowLeaderboard}
+          onScoreSubmitted={handleScoreSubmitted}
         />
         <Junie reaction={reaction} />
       </>
