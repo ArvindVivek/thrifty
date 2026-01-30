@@ -9,11 +9,15 @@
 
 import { GameProvider } from '@/app/contexts/GameContext';
 import { GameContainer } from '@/app/components/GameContainer';
+import { Toaster } from 'sonner';
 
 export default function Home() {
   return (
-    <GameProvider>
-      <GameContainer />
-    </GameProvider>
+    <>
+      <GameProvider>
+        <GameContainer />
+      </GameProvider>
+      <Toaster richColors />
+    </>
   );
 }
