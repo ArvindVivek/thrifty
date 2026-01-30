@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -9,21 +9,32 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Trophy } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { RotateCcw, Trophy, Send, Loader2, Check } from "lucide-react";
 import { getRankTitle } from "@/app/lib/scoreCalculator";
+import { useLeaderboard } from "@/app/hooks/useLeaderboard";
 
 interface GameOverScreenProps {
   totalScore: number;
   onPlayAgain: () => void;
   onLeaderboard: () => void;
+  onScoreSubmitted?: (entryId: string) => void;
 }
 
 export function GameOverScreen({
   totalScore,
   onPlayAgain,
   onLeaderboard,
+  onScoreSubmitted,
 }: GameOverScreenProps) {
   const { rank, title } = getRankTitle(totalScore);
+  const { submitScore } = useLeaderboard();
+
+  // Form state
+  const [name, setName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Determine rank color
   const getRankColor = (rank: string): string => {
@@ -46,6 +57,28 @@ export function GameOverScreen({
   };
 
   const rankColor = getRankColor(rank);
+
+  // Handle score submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name.trim() || submitted) return;
+
+    setSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const entry = await submitScore(name, totalScore);
+      if (entry) {
+        setSubmitted(true);
+        onScoreSubmitted?.(entry.id);
+      }
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Failed to submit score");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-6 animate-in fade-in duration-500">
@@ -82,18 +115,54 @@ export function GameOverScreen({
             </div>
           </div>
 
-          {/* Name Entry Placeholder */}
+          {/* Name Entry Form */}
           <div className="border-t border-gray-700 pt-6">
             <div className="text-center">
-              <p className="text-sm text-gray-500 mb-3">
-                Save your score to the leaderboard
+              <p className="text-sm text-gray-400 mb-3">
+                {submitted ? "Score submitted!" : "Save your score to the leaderboard"}
               </p>
-              <div className="bg-gray-900/50 border border-gray-700 rounded-lg px-4 py-3 text-gray-500 text-sm">
-                Name entry coming soon...
-              </div>
-              <p className="text-xs text-gray-600 mt-2">
-                Phase 8: Leaderboard integration
-              </p>
+
+              {submitted ? (
+                <div className="flex items-center justify-center gap-2 text-green-400 py-3">
+                  <Check className="size-5" />
+                  <span>Score saved as &quot;{name}&quot;</span>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <Input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value.slice(0, 15))}
+                    placeholder="Enter your name"
+                    maxLength={15}
+                    disabled={submitting}
+                    className="bg-gray-900 border-gray-700 text-white text-center"
+                  />
+                  <p className="text-xs text-gray-500">{name.length}/15 characters</p>
+
+                  {submitError && (
+                    <p className="text-sm text-red-400">{submitError}</p>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={!name.trim() || submitting}
+                    className="w-full gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="size-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="size-4" />
+                        Submit Score
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
             </div>
           </div>
         </CardContent>
