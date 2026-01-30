@@ -87,6 +87,7 @@ export function GameContainer() {
         slots={slots}
         activePowerUps={activePowerUps}
         catcherX={catcherX}
+        items={items}
       />
     );
   }
