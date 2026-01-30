@@ -3,3 +3,4 @@
  */
 export { FallingItem } from './FallingItem';
 export { Catcher } from './Catcher';
+export { GameArea } from './GameArea';
