@@ -1,21 +1,38 @@
 "use client";
 
-import React from "react";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { FallingItem, PowerUpEffect } from "@/app/lib/types";
-import { GameArea } from "@/app/components/game";
+import { Card, CardContent } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
+import { GameArea, SlotIndicator } from '../game';
+import { ScreenShake } from '../effects';
 
 interface GameplayScreenProps {
   round: number;
   budget: number;
   maxBudget: number;
-  timer: number;
-  maxTime: number;
+  timer: number; // milliseconds
+  maxTime: number; // milliseconds
   slots: (FallingItem | null)[];
   activePowerUps: PowerUpEffect[];
   catcherX: number;
   items: FallingItem[];
 }
+
+// Power-up display names and colors
+const POWER_UP_DISPLAY: Record<string, { name: string; color: string }> = {
+  slow_motion: { name: 'Slow Mo', color: 'bg-blue-500' },
+  budget_boost: { name: 'Budget+', color: 'bg-green-500' },
+  optimal_hint: { name: 'Hint', color: 'bg-cyan-500' },
+  time_freeze: { name: 'Freeze', color: 'bg-indigo-500' },
+  score_multiplier: { name: '2x Score', color: 'bg-yellow-500' },
+  budget_drain: { name: 'Drain!', color: 'bg-red-500' },
+  speed_up: { name: 'Speed!', color: 'bg-orange-500' },
+  slot_lock: { name: 'Locked!', color: 'bg-gray-500' },
+  point_drain: { name: 'Pts-', color: 'bg-pink-500' },
+};
 
 export function GameplayScreen({
   round,
@@ -28,105 +45,184 @@ export function GameplayScreen({
   catcherX,
   items,
 }: GameplayScreenProps) {
-  // Calculate percentages for color coding
-  const budgetPercentage = (budget / maxBudget) * 100;
-  const timeInSeconds = Math.ceil(timer / 1000);
-  const filledSlotsCount = slots.filter((slot) => slot !== null).length;
+  const timerSeconds = Math.ceil(timer / 1000);
+  const budgetPercent = (budget / maxBudget) * 100;
+  const timerPercent = (timer / maxTime) * 100;
 
-  // Determine budget color
-  const budgetColor =
-    budgetPercentage > 50
-      ? "text-green-500"
-      : budgetPercentage >= 20
-      ? "text-yellow-500"
-      : "text-red-500";
+  // Track budget changes for animation
+  const [displayBudget, setDisplayBudget] = useState(budget);
+  const [budgetDelta, setBudgetDelta] = useState(0);
+  const prevBudgetRef = useRef(budget);
 
-  // Determine timer color
-  const timerColor = timeInSeconds < 5 ? "text-red-500" : "text-foreground";
+  useEffect(() => {
+    if (budget !== prevBudgetRef.current) {
+      const delta = budget - prevBudgetRef.current;
+      setBudgetDelta(delta);
+      prevBudgetRef.current = budget;
+
+      // Animate budget to new value
+      setDisplayBudget(budget);
+
+      // Clear delta after animation
+      const timer = setTimeout(() => setBudgetDelta(0), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [budget]);
+
+  // Screen shake on bust (budget goes to 0 or below)
+  const [shaking, setShaking] = useState(false);
+  useEffect(() => {
+    if (budget <= 0 && prevBudgetRef.current > 0) {
+      setShaking(true);
+      const timer = setTimeout(() => setShaking(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [budget]);
+
+  // Budget color based on remaining
+  const budgetColor = budgetPercent > 50
+    ? 'text-green-500'
+    : budgetPercent > 20
+    ? 'text-yellow-500'
+    : 'text-red-500';
+
+  // Timer color when low
+  const timerColor = timerSeconds <= 5 ? 'text-red-500' : 'text-white';
 
   return (
-    <div className="relative w-full h-screen flex flex-col bg-gradient-to-b from-gray-900 to-gray-800">
-      {/* Top HUD Bar */}
-      <div className="flex items-center justify-between px-6 py-4 bg-black/30 backdrop-blur-sm border-b border-gray-700">
-        {/* Round Indicator */}
-        <div className="flex items-center gap-3">
-          <Badge variant="default" className="text-sm">
-            Round {round}/5
-          </Badge>
-        </div>
+    <ScreenShake active={shaking} intensity={4} duration={200}>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-950 p-4">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* HUD - Top bar */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                {/* Round indicator */}
+                <div className="text-lg font-bold">
+                  Round <span className="text-blue-400">{round}</span>/5
+                </div>
 
-        {/* Budget Display */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Budget:</span>
-          <span className={`text-lg font-bold ${budgetColor}`}>
-            ${budget.toLocaleString()}
-          </span>
-        </div>
+                {/* Budget with animation */}
+                <div className="flex-1 max-w-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-400">Budget</span>
+                    <div className="relative">
+                      <motion.span
+                        className={`font-mono font-bold ${budgetColor}`}
+                        animate={budgetDelta !== 0 ? { scale: [1, 1.2, 1] } : {}}
+                        transition={{ duration: 0.2 }}
+                      >
+                        ${displayBudget.toLocaleString()}
+                      </motion.span>
+                      {/* Delta popup */}
+                      <AnimatePresence>
+                        {budgetDelta !== 0 && (
+                          <motion.span
+                            className={`absolute -right-12 -top-1 text-sm font-bold ${
+                              budgetDelta < 0 ? 'text-red-400' : 'text-green-400'
+                            }`}
+                            initial={{ opacity: 0, y: 0 }}
+                            animate={{ opacity: 1, y: -10 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            {budgetDelta > 0 ? '+' : ''}{budgetDelta}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                  <Progress
+                    value={budgetPercent}
+                    className="h-2"
+                  />
+                </div>
 
-        {/* Timer Display */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-400">Time:</span>
-          <span className={`text-lg font-bold ${timerColor}`}>
-            {timeInSeconds}s
-          </span>
-        </div>
-
-        {/* Active Power-ups */}
-        <div className="flex items-center gap-2">
-          {activePowerUps.length > 0 && (
-            <>
-              <span className="text-sm text-gray-400">Power-ups:</span>
-              <div className="flex gap-1">
-                {activePowerUps.map((powerUp, index) => (
-                  <Badge
-                    key={`${powerUp.type}-${index}`}
-                    variant="secondary"
-                    className="text-xs"
-                  >
-                    {powerUp.type.replace(/_/g, " ")}
-                  </Badge>
-                ))}
+                {/* Timer */}
+                <div className="flex-1 max-w-xs">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-gray-400">Time</span>
+                    <motion.span
+                      className={`font-mono font-bold ${timerColor}`}
+                      animate={timerSeconds <= 5 ? { scale: [1, 1.1, 1] } : {}}
+                      transition={{ duration: 0.5, repeat: timerSeconds <= 5 ? Infinity : 0 }}
+                    >
+                      {timerSeconds}s
+                    </motion.span>
+                  </div>
+                  <Progress
+                    value={timerPercent}
+                    className="h-2"
+                  />
+                </div>
               </div>
-            </>
-          )}
+            </CardContent>
+          </Card>
+
+          {/* Main game area and side panel */}
+          <div className="flex gap-4">
+            {/* Game area */}
+            <div className="flex-shrink-0">
+              <GameArea
+                items={items}
+                catcherX={catcherX}
+                activePowerUps={activePowerUps}
+              />
+            </div>
+
+            {/* Side panel - Slots and Power-ups */}
+            <div className="flex-1 space-y-4">
+              {/* Player slots */}
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold text-gray-400 mb-3">Equipment</h3>
+                  <div className="flex gap-2 flex-wrap">
+                    {slots.map((slot, index) => (
+                      <SlotIndicator key={index} slot={slot} index={index} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Active power-ups */}
+              {activePowerUps.length > 0 && (
+                <Card className="bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-semibold text-gray-400 mb-3">Active Effects</h3>
+                    <div className="flex gap-2 flex-wrap">
+                      {activePowerUps.map((powerUp, index) => {
+                        const display = POWER_UP_DISPLAY[powerUp.type] || {
+                          name: powerUp.type,
+                          color: 'bg-gray-500'
+                        };
+                        return (
+                          <motion.div
+                            key={`${powerUp.type}-${index}`}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                          >
+                            <Badge
+                              className={`${display.color} text-white animate-pulse`}
+                            >
+                              {display.name}
+                              {powerUp.duration > 0 && (
+                                <span className="ml-1 text-xs opacity-75">
+                                  {Math.ceil(powerUp.duration / 1000)}s
+                                </span>
+                              )}
+                            </Badge>
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Game Area */}
-      <div className="flex-1 relative flex items-center justify-center">
-        <GameArea items={items} catcherX={catcherX} activePowerUps={activePowerUps} />
-      </div>
-
-      {/* Bottom HUD - Slot Indicators */}
-      <div className="px-6 py-4 bg-black/30 backdrop-blur-sm border-t border-gray-700">
-        <div className="flex flex-col items-center gap-3">
-          {/* Slot Count */}
-          <div className="text-sm text-gray-400">
-            Slots: {filledSlotsCount}/5
-          </div>
-
-          {/* Slot Indicators */}
-          <div className="flex gap-3">
-            {slots.map((slot, index) => (
-              <div
-                key={index}
-                className={`w-16 h-16 flex items-center justify-center rounded-lg text-xs font-bold ${
-                  slot !== null
-                    ? "bg-blue-500/30 border-2 border-blue-500"
-                    : "border-2 border-dashed border-gray-600"
-                }`}
-              >
-                P{index + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Controls Hint */}
-          <div className="text-xs text-gray-500 mt-2">
-            Use arrow keys to move
-          </div>
-        </div>
-      </div>
-    </div>
+    </ScreenShake>
   );
 }
