@@ -189,6 +189,8 @@ export function GameContainer() {
           }}
           onLeaderboard={handleShowLeaderboard}
           onScoreSubmitted={handleScoreSubmitted}
+          failReason={failReason}
+          round={round}
         />
         <Junie reaction={reaction} />
       </>

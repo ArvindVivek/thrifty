@@ -343,8 +343,8 @@ export class GameEngine {
       } else {
         // Regular item - check budget and fill slot
         if (this.gameState.budget - item.cost < 0) {
-          // Budget bust!
-          this.gameState.status = 'round_failed';
+          // Budget bust - game over!
+          this.gameState.status = 'game_over';
           this.gameState.failReason = 'bust';
 
           // Emit round failed event
@@ -466,7 +466,7 @@ export class GameEngine {
 
     // Check timeout
     if (this.gameState.timer <= 0 && filledSlots < 5) {
-      // Timeout - calculate partial score
+      // Timeout - calculate partial score then game over
       const scoreResult = calculateRoundScore(
         this.gameState.slots,
         this.gameState.budget,
@@ -478,7 +478,7 @@ export class GameEngine {
 
       this.gameState.lastScore = scoreResult;
       this.gameState.totalScore += scoreResult.totalScore;
-      this.gameState.status = 'round_failed';
+      this.gameState.status = 'game_over';
       this.gameState.failReason = 'timeout';
 
       // Emit round failed event

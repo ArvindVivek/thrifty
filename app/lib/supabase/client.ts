@@ -1,7 +1,8 @@
 // Supabase client for browser/client components
 // Uses anon key for public data access with thrifty schema
+// No auth persistence needed (anonymous access via RLS)
 
-import { createBrowserClient as createClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 
 export function createBrowserClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -12,6 +13,10 @@ export function createBrowserClient() {
   }
 
   return createClient(supabaseUrl, supabaseAnonKey, {
-    db: { schema: 'thrifty' }
+    db: { schema: 'thrifty' },
+    auth: {
+      persistSession: false,  // No auth sessions - anonymous access only
+      autoRefreshToken: false
+    }
   })
 }

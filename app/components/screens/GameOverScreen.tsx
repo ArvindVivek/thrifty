@@ -19,6 +19,8 @@ interface GameOverScreenProps {
   onPlayAgain: () => void;
   onLeaderboard: () => void;
   onScoreSubmitted?: (entryId: string) => void;
+  failReason?: 'bust' | 'timeout';
+  round?: number;
 }
 
 export function GameOverScreen({
@@ -26,6 +28,8 @@ export function GameOverScreen({
   onPlayAgain,
   onLeaderboard,
   onScoreSubmitted,
+  failReason,
+  round,
 }: GameOverScreenProps) {
   const { rank, title } = getRankTitle(totalScore);
   const { submitScore } = useLeaderboard();
@@ -84,9 +88,15 @@ export function GameOverScreen({
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 flex items-center justify-center p-6 animate-in fade-in duration-500">
       <Card className="max-w-lg w-full bg-gray-800 border-gray-700">
         <CardHeader className="text-center">
-          <CardTitle className="text-4xl text-yellow-500 mb-2">
-            Game Over
+          <CardTitle className={`text-4xl mb-2 ${failReason ? 'text-red-500' : 'text-yellow-500'}`}>
+            {failReason ? 'Game Over!' : 'Victory!'}
           </CardTitle>
+          {failReason && (
+            <p className="text-sm text-gray-400">
+              {failReason === 'bust' && `Budget bust on Round ${round}`}
+              {failReason === 'timeout' && `Time ran out on Round ${round}`}
+            </p>
+          )}
         </CardHeader>
 
         <CardContent className="space-y-6">
