@@ -116,3 +116,17 @@ export type GameEvent =
   | { type: 'round_failed'; reason: 'bust' | 'timeout' }
   | { type: 'combo_achieved'; combo: import('./scoreCalculator').ComboBonus }
   | { type: 'timer_warning' };
+
+/**
+ * Leaderboard Types
+ */
+
+/**
+ * Leaderboard entry from Supabase thrifty.leaderboard table
+ */
+export interface LeaderboardEntry {
+  id: string;
+  name: string;
+  score: number;
+  created_at: string;
+}
