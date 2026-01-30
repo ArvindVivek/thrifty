@@ -3,12 +3,14 @@ import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@/app/lib/constants';
 import { FallingItem } from './FallingItem';
 import { Catcher } from './Catcher';
 import { PowerUpTint } from '../effects';
-import { hasOptimalHint } from '@/app/lib/powerUps';
+import { hasOptimalHint, isOptimalItem } from '@/app/lib/powerUps';
 
 interface GameAreaProps {
   items: FallingItemType[];
   catcherX: number;
   activePowerUps: PowerUpEffect[];
+  budget: number;
+  slots: (FallingItemType | null)[];
 }
 
 /**
@@ -16,8 +18,9 @@ interface GameAreaProps {
  * Uses fixed dimensions from constants and contains all game rendering elements.
  * CSS containment isolates game rendering from HUD recalculations.
  */
-export function GameArea({ items, catcherX, activePowerUps }: GameAreaProps) {
+export function GameArea({ items, catcherX, activePowerUps, budget, slots }: GameAreaProps) {
   const hintActive = hasOptimalHint(activePowerUps);
+  const slotsRemaining = slots.filter(slot => slot === null).length;
 
   return (
     <div
@@ -36,7 +39,7 @@ export function GameArea({ items, catcherX, activePowerUps }: GameAreaProps) {
         <FallingItem
           key={item.id}
           item={item}
-          highlighted={hintActive && !item.isPowerUp && item.value >= 150}
+          highlighted={hintActive && isOptimalItem(item, budget, slotsRemaining)}
         />
       ))}
 

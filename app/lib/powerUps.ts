@@ -232,3 +232,48 @@ export function getLockedSlot(effects: PowerUpEffect[]): number {
 export function hasOptimalHint(effects: PowerUpEffect[]): boolean {
   return effects.some((effect) => effect.type === 'optimal_hint');
 }
+
+/**
+ * Determine if an item should be highlighted by optimal hint
+ *
+ * Considers:
+ * - Budget remaining (won't highlight items that would bust)
+ * - Slots remaining (prioritizes high value when few slots left)
+ * - Value-to-cost ratio (efficiency)
+ * - Strategic value based on game state
+ *
+ * @param item - The item to evaluate
+ * @param budget - Current budget remaining
+ * @param slotsRemaining - Number of empty slots left
+ * @returns True if this item is optimal to catch
+ */
+export function isOptimalItem(
+  item: { cost: number; value: number; isPowerUp?: boolean },
+  budget: number,
+  slotsRemaining: number
+): boolean {
+  // Never highlight power-ups
+  if (item.isPowerUp) return false;
+
+  // Don't highlight if it would bust the budget
+  if (item.cost > budget) return false;
+
+  // Calculate value-to-cost ratio (efficiency)
+  const ratio = item.value / item.cost;
+
+  // Calculate budget per remaining slot (need to save budget for other slots)
+  const budgetPerSlot = budget / slotsRemaining;
+
+  // Strategy based on slots remaining
+  if (slotsRemaining === 1) {
+    // Last slot - highlight high value items (value >= 150) that fit budget
+    return item.value >= 150;
+  } else if (slotsRemaining === 2) {
+    // 2 slots left - be selective, good ratio or high value
+    return ratio >= 2.0 || item.value >= 150;
+  } else {
+    // 3+ slots remaining - highlight efficient items
+    // Good ratio AND not too expensive (save budget for later)
+    return ratio >= 2.5 && item.cost <= budgetPerSlot * 1.5;
+  }
+}
