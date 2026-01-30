@@ -227,9 +227,15 @@ export class GameEngine {
     }
 
     // Notify React of state changes (for rendering)
-    // IMPORTANT: Spread to create new object reference - React useState
+    // IMPORTANT: Deep clone to create new object reference - React useState
     // uses referential equality, so same object won't trigger re-render
-    this.onStateChange?.({ ...this.gameState });
+    // Must also clone items array since we mutate item positions in-place
+    this.onStateChange?.({
+      ...this.gameState,
+      items: [...this.gameState.items],
+      slots: [...this.gameState.slots],
+      activePowerUps: [...this.gameState.activePowerUps],
+    });
 
     // Schedule next frame
     this.animationFrameId = requestAnimationFrame(this.loop);
