@@ -229,10 +229,11 @@ export class GameEngine {
     // Notify React of state changes (for rendering)
     // IMPORTANT: Deep clone to create new object reference - React useState
     // uses referential equality, so same object won't trigger re-render
-    // Must also clone items array since we mutate item positions in-place
+    // Must deep clone items (not just array) since we mutate positions in-place
+    // and FallingItem is memoized with object reference comparison
     this.onStateChange?.({
       ...this.gameState,
-      items: [...this.gameState.items],
+      items: this.gameState.items.map(item => ({ ...item })),
       slots: [...this.gameState.slots],
       activePowerUps: [...this.gameState.activePowerUps],
     });
