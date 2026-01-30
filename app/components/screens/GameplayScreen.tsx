@@ -3,6 +3,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { FallingItem, PowerUpEffect } from "@/app/lib/types";
+import { GameArea } from "@/app/components/game";
 
 interface GameplayScreenProps {
   round: number;
@@ -13,6 +14,7 @@ interface GameplayScreenProps {
   slots: (FallingItem | null)[];
   activePowerUps: PowerUpEffect[];
   catcherX: number;
+  items: FallingItem[];
 }
 
 export function GameplayScreen({
@@ -24,6 +26,7 @@ export function GameplayScreen({
   slots,
   activePowerUps,
   catcherX,
+  items,
 }: GameplayScreenProps) {
   // Calculate percentages for color coding
   const budgetPercentage = (budget / maxBudget) * 100;
@@ -91,12 +94,7 @@ export function GameplayScreen({
 
       {/* Game Area */}
       <div className="flex-1 relative flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-gray-500 text-sm">Game Area</p>
-          <p className="text-gray-600 text-xs">
-            Catcher X: {Math.round(catcherX)}
-          </p>
-        </div>
+        <GameArea items={items} catcherX={catcherX} />
       </div>
 
       {/* Bottom HUD - Slot Indicators */}
