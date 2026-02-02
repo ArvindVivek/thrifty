@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'motion/react';
+import Image from 'next/image';
 import { FallingItem } from '@/app/lib/types';
+import { CATEGORY_COLORS, ValorantCategory } from '@/app/lib/valorantItems';
 
 interface SlotIndicatorProps {
   slot: FallingItem | null;
@@ -11,24 +13,18 @@ interface SlotIndicatorProps {
 }
 
 /**
- * Category colors for filled slots
+ * Player position names for roster feel
  */
-const CATEGORY_STYLES = {
-  weapon: 'bg-cat-weapon border-cat-weapon/60',
-  shield: 'bg-cat-shield border-cat-shield/60',
-  utility: 'bg-cat-utility border-cat-utility/60',
-  premium: 'bg-cat-premium border-cat-premium/60',
-  bonus: 'bg-cat-bonus border-cat-bonus/60',
-} as const;
+const POSITION_NAMES = ['Duelist', 'Sentinel', 'Controller', 'Initiator', 'Flex'];
 
 /**
- * SlotIndicator - Shows equipment slot status (P1-P5)
+ * SlotIndicator - Shows equipment slot as loadout inventory
  *
  * Features:
- * - Empty, filled, and locked states
- * - Category-colored when filled
- * - Spring animation on fill
+ * - Shows actual weapon/item image when filled
+ * - Empty slots show position name
  * - Locked state with visual indicator
+ * - Animation on fill
  */
 export function SlotIndicator({ slot, index, locked = false }: SlotIndicatorProps) {
   const [justFilled, setJustFilled] = useState(false);
@@ -45,22 +41,26 @@ export function SlotIndicator({ slot, index, locked = false }: SlotIndicatorProp
   }, [slot]);
 
   const filled = slot !== null;
-  const categoryStyle = slot ? CATEGORY_STYLES[slot.category] : '';
+  const categoryColors = slot?.valorantCategory
+    ? CATEGORY_COLORS[slot.valorantCategory as ValorantCategory]
+    : null;
 
   return (
     <motion.div
       className={`
-        w-14 h-14 rounded-lg flex items-center justify-center
-        font-bold text-sm border-2 relative transition-colors
+        w-20 h-16 rounded-lg flex flex-col items-center justify-center
+        font-bold text-xs border-2 relative overflow-hidden
         ${filled
-          ? categoryStyle
+          ? categoryColors
+            ? `${categoryColors.bg} ${categoryColors.border}`
+            : 'bg-secondary border-border'
           : locked
           ? 'bg-val-red/10 border-val-red/50'
-          : 'bg-secondary border-border'
+          : 'bg-secondary/50 border-border/50'
         }
       `}
       animate={justFilled ? {
-        scale: [1, 1.15, 1],
+        scale: [1, 1.1, 1],
       } : { scale: 1 }}
       transition={{
         duration: 0.3,
@@ -75,7 +75,7 @@ export function SlotIndicator({ slot, index, locked = false }: SlotIndicatorProp
           animate={{
             boxShadow: [
               '0 0 0 0 rgba(255,255,255,0)',
-              '0 0 15px 3px rgba(255,255,255,0.4)',
+              '0 0 20px 4px rgba(255,255,255,0.5)',
               '0 0 0 0 rgba(255,255,255,0)'
             ]
           }}
@@ -85,16 +85,50 @@ export function SlotIndicator({ slot, index, locked = false }: SlotIndicatorProp
 
       {/* Lock icon for locked slots */}
       {locked && !filled && (
-        <span className="absolute text-base">🔒</span>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+          <Image
+            src="/assets/powerups/slot_lock.svg"
+            alt="Locked"
+            width={32}
+            height={32}
+            className="object-contain opacity-80"
+            unoptimized
+          />
+        </div>
       )}
 
-      {/* Slot label */}
-      {filled ? (
-        <span className="text-white drop-shadow-md font-semibold">P{index + 1}</span>
+      {/* Slot content */}
+      {filled && slot ? (
+        <div className="flex flex-col items-center gap-0.5">
+          {/* Item image */}
+          {slot.image ? (
+            <div className="w-16 h-9 flex items-center justify-center">
+              <Image
+                src={slot.image}
+                alt={slot.itemName || 'Item'}
+                width={60}
+                height={32}
+                className="object-contain drop-shadow-md"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <span className="text-white text-xs">{slot.itemName}</span>
+          )}
+          {/* Item name */}
+          <span className={`text-[9px] font-medium truncate max-w-full px-1 ${categoryColors?.text || 'text-white'}`}>
+            {slot.itemName}
+          </span>
+        </div>
       ) : locked ? (
-        <span className="text-val-red/70 text-xs mt-6">Locked</span>
+        <span className="text-val-red/70 text-[10px] mt-5">Locked</span>
       ) : (
-        <span className="text-muted-foreground">P{index + 1}</span>
+        <div className="flex flex-col items-center gap-1 opacity-50">
+          <div className="w-10 h-6 border border-dashed border-muted-foreground/30 rounded flex items-center justify-center">
+            <span className="text-muted-foreground/50 text-[10px]">?</span>
+          </div>
+          <span className="text-muted-foreground text-[9px]">{POSITION_NAMES[index]}</span>
+        </div>
       )}
     </motion.div>
   );

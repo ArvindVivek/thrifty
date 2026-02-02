@@ -5,7 +5,8 @@
  *
  * Renders different screens based on gameState.status:
  * - menu: Title screen with Start button
- * - playing: Game screen with debug display
+ * - ready: GameplayScreen with Begin overlay (instructions visible)
+ * - playing: Game screen with active gameplay
  * - round_complete: Round complete screen with Next Round button
  * - round_failed: Round failed screen with Retry button
  * - game_over: Game over screen with Restart button
@@ -17,10 +18,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGame } from '@/app/contexts/GameContext';
 import { useJunieContext } from '@/app/contexts/JunieContext';
-import { getRankTitle } from '@/app/lib/scoreCalculator';
 import {
   TitleScreen,
-  HowToPlayScreen,
   GameplayScreen,
   RoundCompleteScreen,
   RoundFailScreen,
@@ -52,7 +51,7 @@ export function GameContainer() {
     catcher,
   } = gameState;
 
-  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [submittedEntryId, setSubmittedEntryId] = useState<string | null>(null);
   const { reaction, triggerRoundStart, triggerFourSlots, triggerGameOver } = useJunieContext();
@@ -102,12 +101,23 @@ export function GameContainer() {
     );
   }
 
-  // HowToPlay intercept (before menu)
-  if (status === 'menu' && showHowToPlay) {
+  // Ready screen - show gameplay UI with Begin overlay (before playing starts)
+  if (status === 'menu' && isReady) {
+    const config = ROUND_CONFIG[0]; // Round 1 config for ready state
     return (
-      <HowToPlayScreen
-        onAdvance={() => {
-          setShowHowToPlay(false);
+      <GameplayScreen
+        round={1}
+        budget={config.budget}
+        maxBudget={config.budget}
+        timer={config.duration}
+        maxTime={config.duration}
+        slots={[null, null, null, null, null]}
+        activePowerUps={[]}
+        catcherX={(800 - 80) / 2} // Centered catcher
+        items={[]}
+        isReady={true}
+        onBegin={() => {
+          setIsReady(false);
           engine.startRound(1);
         }}
       />
@@ -118,7 +128,7 @@ export function GameContainer() {
   if (status === 'menu') {
     return (
       <TitleScreen
-        onStart={() => setShowHowToPlay(true)}
+        onStart={() => setIsReady(true)}
         onLeaderboard={handleShowLeaderboard}
       />
     );

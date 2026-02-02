@@ -1,102 +1,79 @@
 /**
- * Item spawning system with weighted category selection
+ * Item spawning system using real Valorant weapons and gear
  *
- * Handles creation of falling items with proper randomization and timing.
+ * Spawns authentic Valorant items with real prices and images.
  */
 
-import { FallingItem, ItemCategory } from './types';
+import { FallingItem, ItemCategory, ValorantCategory } from './types';
 import {
   CANVAS_WIDTH,
   ITEM_WIDTH,
   ITEM_HEIGHT,
   ITEM_BASE_SPEED,
-  ITEM_COSTS,
-  CATEGORY_MULTIPLIERS,
   ROUND_CONFIG,
 } from './constants';
+import { VALORANT_ITEMS, ValorantItem } from './valorantItems';
 
 /**
- * Drop rate weights for each item category (from REQUIREMENTS.md)
- * - Weapon: 30%
- * - Shield: 25%
- * - Utility: 25%
- * - Premium: 15%
- * - Bonus: 5%
+ * Map Valorant categories to legacy ItemCategory for compatibility
  */
-export const CATEGORY_WEIGHTS: Record<ItemCategory, number> = {
-  weapon: 30,
-  shield: 25,
-  utility: 25,
-  premium: 15,
-  bonus: 5,
+const VALORANT_TO_LEGACY_CATEGORY: Record<ValorantCategory, ItemCategory> = {
+  sidearm: 'utility',
+  smg: 'weapon',
+  shotgun: 'weapon',
+  rifle: 'premium',
+  sniper: 'premium',
+  heavy: 'weapon',
+  shield: 'shield',
 };
 
 /**
  * Spawn intervals for each round (in milliseconds)
- * From REQUIREMENTS.md
  */
-export const SPAWN_INTERVALS = [1200, 1000, 900, 800, 700] as const;
+export const SPAWN_INTERVALS = [1400, 1000, 700] as const;
 
 /**
- * Select item category using weighted random distribution
- *
- * Higher weight = higher probability of selection.
- * Algorithm: Generate random number in [0, totalWeight), subtract weights
- * until random <= 0, return that category.
- *
- * @param weights - Record of category weights
- * @returns Selected category
+ * Get items appropriate for current budget with weighted selection
+ * Cheaper items are more common, expensive items are rarer
  */
-export function selectWeightedCategory(weights: Record<ItemCategory, number>): ItemCategory {
-  const totalWeight = Object.values(weights).reduce((sum, w) => sum + w, 0);
+function selectRandomItem(maxBudget: number): ValorantItem | null {
+  // Filter items that fit in budget
+  const affordableItems = VALORANT_ITEMS.filter(item => item.cost <= maxBudget);
 
-  // Handle edge case: all weights are zero
-  if (totalWeight === 0) {
-    return 'weapon'; // Fallback to weapon
-  }
+  if (affordableItems.length === 0) return null;
+
+  // Weight by inverse of cost (cheaper items more common)
+  const maxCost = Math.max(...affordableItems.map(i => i.cost));
+  const weights = affordableItems.map(item => maxCost - item.cost + 100);
+  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
   let random = Math.random() * totalWeight;
-
-  for (const [category, weight] of Object.entries(weights) as [ItemCategory, number][]) {
-    random -= weight;
+  for (let i = 0; i < affordableItems.length; i++) {
+    random -= weights[i];
     if (random <= 0) {
-      return category;
+      return affordableItems[i];
     }
   }
 
-  // Fallback (should never reach here with proper weights)
-  return 'weapon';
+  return affordableItems[0];
 }
 
 /**
- * Create a new falling item with randomized properties
+ * Create a new falling Valorant item
  *
- * Item spawns:
- * - Horizontally: Between 10%-90% of canvas width (minus item width)
- * - Vertically: Above screen at y = -ITEM_HEIGHT
- * - Cost: Random within category range
- * - Value: cost × category multiplier × random(0.8-1.2)
- * - Velocity: Based on round speed multiplier
- *
- * @param category - Item category
- * @param round - Current round number (1-5)
+ * @param round - Current round number (1-3)
+ * @param currentBudget - Current player budget
  * @returns New falling item entity
  */
-export function createItem(category: ItemCategory, round: number): FallingItem {
-  const costs = ITEM_COSTS[category];
+export function createItem(round: number, currentBudget: number): FallingItem | null {
+  const valorantItem = selectRandomItem(currentBudget);
 
-  // Random cost within category range
-  const cost = Math.floor(Math.random() * (costs.max - costs.min + 1)) + costs.min;
+  if (!valorantItem) return null;
 
   // Spawn x position: 10%-90% of canvas width (account for item width)
   const minX = CANVAS_WIDTH * 0.1;
   const maxX = CANVAS_WIDTH * 0.9 - ITEM_WIDTH;
   const x = Math.random() * (maxX - minX) + minX;
-
-  // Calculate value with category multiplier and random variance
-  const multiplier = CATEGORY_MULTIPLIERS[category];
-  const variance = 0.8 + Math.random() * 0.4; // Random 0.8-1.2
-  const value = Math.floor(cost * multiplier * variance);
 
   // Calculate velocity based on round
   const roundConfig = ROUND_CONFIG[round - 1];
@@ -108,18 +85,28 @@ export function createItem(category: ItemCategory, round: number): FallingItem {
     y: -ITEM_HEIGHT, // Spawn above screen
     width: ITEM_WIDTH,
     height: ITEM_HEIGHT,
-    category,
-    cost,
-    value,
+    category: VALORANT_TO_LEGACY_CATEGORY[valorantItem.category],
+    cost: valorantItem.cost,
+    value: valorantItem.value,
     velocityY,
+    // Valorant-specific properties
+    itemId: valorantItem.id,
+    itemName: valorantItem.name,
+    image: valorantItem.image,
+    valorantCategory: valorantItem.category,
   };
+}
+
+// Legacy function for compatibility
+export function selectWeightedCategory(): ItemCategory {
+  return 'weapon';
 }
 
 /**
  * Item spawner class
  *
  * Manages spawn timing and rate based on round configuration.
- * Spawn rate increases (interval decreases) in later rounds.
+ * Spawns real Valorant items based on current budget.
  */
 export class ItemSpawner {
   private lastSpawnTime: number = -Infinity; // Allow immediate first spawn
@@ -128,10 +115,10 @@ export class ItemSpawner {
   /**
    * Create new ItemSpawner for specified round
    *
-   * @param round - Current round number (1-5)
+   * @param round - Current round number (1-3)
    */
   constructor(round: number) {
-    this.spawnInterval = SPAWN_INTERVALS[round - 1];
+    this.spawnInterval = SPAWN_INTERVALS[round - 1] || SPAWN_INTERVALS[0];
   }
 
   /**
@@ -141,15 +128,17 @@ export class ItemSpawner {
    * otherwise returns null.
    *
    * @param currentTime - Current game time in milliseconds
-   * @param round - Current round number (1-5)
+   * @param round - Current round number (1-3)
+   * @param currentBudget - Current player budget for filtering items
    * @returns New item if spawned, null otherwise
    */
-  update(currentTime: number, round: number): FallingItem | null {
+  update(currentTime: number, round: number, currentBudget?: number): FallingItem | null {
     if (currentTime - this.lastSpawnTime >= this.spawnInterval) {
       this.lastSpawnTime = currentTime;
 
-      const category = selectWeightedCategory(CATEGORY_WEIGHTS);
-      return createItem(category, round);
+      // Use current budget or a high default
+      const budget = currentBudget ?? 5000;
+      return createItem(round, budget);
     }
 
     return null;

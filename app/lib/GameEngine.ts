@@ -286,7 +286,7 @@ export class GameEngine {
 
     // ===== b) Spawn items =====
     if (this.itemSpawner) {
-      const newItem = this.itemSpawner.update(this.gameTime, this.gameState.round);
+      const newItem = this.itemSpawner.update(this.gameTime, this.gameState.round, this.gameState.budget);
 
       if (newItem) {
         // 26% chance to spawn power-up instead of regular item

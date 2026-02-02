@@ -43,7 +43,7 @@ export default function Home() {
       <JunieProvider>
         <GameWithEvents />
       </JunieProvider>
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="bottom-right" />
     </>
   );
 }

@@ -23,9 +23,14 @@ export interface AABB {
 }
 
 /**
- * Item category types
+ * Item category types (legacy - kept for compatibility)
  */
 export type ItemCategory = 'weapon' | 'shield' | 'utility' | 'premium' | 'bonus';
+
+/**
+ * Valorant item category types
+ */
+export type ValorantCategory = 'sidearm' | 'smg' | 'shotgun' | 'rifle' | 'sniper' | 'heavy' | 'shield';
 
 /**
  * Power-up types
@@ -62,6 +67,11 @@ export interface FallingItem extends AABB {
   velocityY: number;
   isPowerUp?: boolean; // true if this is a power-up instead of regular item
   powerUpType?: PowerUpType; // type of power-up if isPowerUp is true
+  // Valorant item properties
+  itemId?: string; // Valorant item ID (e.g., 'vandal', 'phantom')
+  itemName?: string; // Display name (e.g., 'Vandal', 'Phantom')
+  image?: string; // Path to item image
+  valorantCategory?: ValorantCategory; // Valorant-specific category
 }
 
 /**
