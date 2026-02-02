@@ -16,6 +16,7 @@ import {
   CATCHER_WIDTH,
   CATCHER_SPEED,
   ROUND_CONFIG,
+  TOTAL_ROUNDS,
 } from './constants';
 import { findCollidingItems, isOffScreen } from './collision';
 import { ItemSpawner } from './itemSpawner';
@@ -418,7 +419,7 @@ export class GameEngine {
       this.gameState.lastScore = scoreResult;
       this.gameState.totalScore += scoreResult.totalScore;
 
-      if (this.gameState.round < 5) {
+      if (this.gameState.round < TOTAL_ROUNDS) {
         this.gameState.status = 'round_complete';
       } else {
         this.gameState.status = 'game_over';

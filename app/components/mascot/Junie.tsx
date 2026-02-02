@@ -8,7 +8,7 @@ interface JunieProps {
 }
 
 /**
- * Junie mascot component - Cloud9's cat mascot providing game feedback
+ * Junie mascot component - Cat mascot providing game feedback
  *
  * Fixed position in bottom-left corner.
  * Shows emoji with animated speech bubble that fades after 1.5s.

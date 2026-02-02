@@ -64,19 +64,20 @@ export const ITEM_BASE_SPEED = 150;
 // ============================================================================
 
 /**
- * Configuration for each of the 5 rounds
+ * Configuration for each of the 3 rounds (Easy, Medium, Hard)
  * - budget: Starting budget for the round
  * - duration: Round duration in milliseconds
  * - speedMultiplier: Multiplier applied to ITEM_BASE_SPEED
  * - spawnInterval: Milliseconds between item spawns
+ * - name: Display name for the round
  */
 export const ROUND_CONFIG = [
-  { budget: 4500, duration: 30000, speedMultiplier: 1.0, spawnInterval: 1200 },
-  { budget: 4000, duration: 28000, speedMultiplier: 1.1, spawnInterval: 1000 },
-  { budget: 3500, duration: 26000, speedMultiplier: 1.2, spawnInterval: 900 },
-  { budget: 3000, duration: 24000, speedMultiplier: 1.3, spawnInterval: 800 },
-  { budget: 2500, duration: 22000, speedMultiplier: 1.4, spawnInterval: 700 },
+  { budget: 5000, duration: 35000, speedMultiplier: 1.0, spawnInterval: 1400, name: 'Easy' },
+  { budget: 4000, duration: 30000, speedMultiplier: 1.25, spawnInterval: 1000, name: 'Medium' },
+  { budget: 3000, duration: 25000, speedMultiplier: 1.5, spawnInterval: 700, name: 'Hard' },
 ] as const;
+
+export const TOTAL_ROUNDS = 3;
 
 // ============================================================================
 // Item Category Costs
