@@ -18,25 +18,24 @@ export type JunieReactionType =
   | 'idle';
 
 export interface JunieReaction {
-  emoji: string;
+  image: string;  // Changed from emoji to image path
   text: string;
 }
 
 export const JUNIE_REACTIONS: Record<JunieReactionType, JunieReaction> = {
-  // From REQUIREMENTS.md
-  round_start: { emoji: '🐱', text: "Let's gear up!" },
-  catch_cheap: { emoji: '😸', text: "That's thrifty!" },
-  catch_expensive: { emoji: '😰', text: 'Big spender...' },
-  catch_powerup: { emoji: '😺', text: 'Nice find!' },
-  four_slots_filled: { emoji: '😼', text: 'One more!' },
-  budget_warning: { emoji: '😿', text: 'Watch the budget!' },
-  round_complete: { emoji: '😻', text: 'Squad ready!' },
-  perfect_budget: { emoji: '🎉', text: 'PERFECT!' },
-  budget_bust: { emoji: '🙀', text: 'Over budget!' },
-  time_warning: { emoji: '😿', text: 'Hurry up!' },
-  timeout: { emoji: '😿', text: 'Too slow...' },
-  hit_negative: { emoji: '😾', text: 'Ouch!' },
-  game_over_good: { emoji: '😻', text: 'Amazing work!' },
-  game_over_bad: { emoji: '😿', text: 'Try again!' },
-  idle: { emoji: '🐱', text: '' }, // No speech bubble for idle
+  round_start: { image: '/kodee/kodee-pleased.png', text: "Let's gear up!" },
+  catch_cheap: { image: '/kodee/kodee-excited.png', text: "That's thrifty!" },
+  catch_expensive: { image: '/kodee/kodee-shocked.png', text: 'Big spender...' },
+  catch_powerup: { image: '/kodee/kodee-surprised.png', text: 'Nice find!' },
+  four_slots_filled: { image: '/kodee/kodee-naughty.png', text: 'One more!' },
+  budget_warning: { image: '/kodee/kodee-frustrated.png', text: 'Watch the budget!' },
+  round_complete: { image: '/kodee/kodee-loving.png', text: 'Squad ready!' },
+  perfect_budget: { image: '/kodee/kodee-excited.png', text: 'PERFECT!' },
+  budget_bust: { image: '/kodee/kodee-angry.png', text: 'Over budget!' },
+  time_warning: { image: '/kodee/kodee-frightened.png', text: 'Hurry up!' },
+  timeout: { image: '/kodee/kodee-sad.png', text: 'Too slow...' },
+  hit_negative: { image: '/kodee/kodee-grumpy.png', text: 'Ouch!' },
+  game_over_good: { image: '/kodee/kodee-welcoming.png', text: 'Amazing work!' },
+  game_over_bad: { image: '/kodee/kodee-broken-hearted.png', text: 'Try again!' },
+  idle: { image: '/kodee/kodee-pleased.png', text: '' },
 };

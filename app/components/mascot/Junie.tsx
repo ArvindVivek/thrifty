@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { JunieReactionType, JUNIE_REACTIONS } from './junieReactions';
 
 interface JunieProps {
@@ -35,9 +36,15 @@ export function Junie({ reaction }: JunieProps) {
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex items-end gap-2">
-      {/* Mascot emoji - large size for visibility */}
-      <div className="text-5xl select-none" role="img" aria-label="Junie the cat mascot">
-        {reactionData.emoji}
+      {/* Kodee mascot - large size for visibility */}
+      <div className="w-16 h-16 relative select-none" role="img" aria-label="Kodee the Kotlin mascot">
+        <Image
+          src={reactionData.image}
+          alt="Kodee"
+          fill
+          className="object-contain"
+          priority
+        />
       </div>
 
       {/* Speech bubble with fade animation */}
