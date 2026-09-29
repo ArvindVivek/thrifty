@@ -1,10 +1,94 @@
 # Thrifty
 
-An arcade budget game: catch falling items to fill five slots without going over budget.
-Built at the Cloud9 x JetBrains 2026 hackathon; being moved onto Kitchen Labs' web standard
-(`kitchenlabs-kit/docs/standards/web-release-standard.md`) on branch `web-release`.
+An arcade budget game: things fall from the shelves with a price on each; catch five before the
+clock runs out without going over budget. Three rounds, a public leaderboard, phone and desktop,
+light and dark. Built at the Cloud9 x JetBrains 2026 hackathon; moved onto Kitchen Labs' web
+standard (`kitchenlabs-kit/docs/standards/web-release-standard.md`) on 2026-09-29.
+
+- Live: https://thrifty-kappa.vercel.app (Vercel project `thrifty`, scope `arvindviveks-projects`,
+  repo ArvindVivek/thrifty, deploys on push to `main`).
+- Commit author for this repo: `Arvind Vivekanandan <18371231+ArvindVivek@users.noreply.github.com>`
+  (set in the local git config; other emails fail with `COMMIT_AUTHOR_REQUIRED`).
+- Brand key `thrifty`, accent "bargain lime" `#A3C614` (palette in `styles/theme.css`, roles in
+  `DESIGN.md`).
+
+## Commands
+
+| Command | What |
+|---|---|
+| `npm run dev` | Dev server on port 3187 |
+| `npm run gate` | Kit check, typecheck, eslint (0 warnings), vitest, build, leak-check. Must pass before any push |
+| `npm run e2e` | Playwright on the production build (build first): phone + desktop, server TZ=UTC, browser America/Los_Angeles, no console errors. Plays real games through the UI and saves a score to the shared Supabase, then deletes the test users with the service role and proves nothing is left |
+| `npm run e2e:live` | Against production: routes, no secrets in the JS, a real round trip, and the database rule proofs (out-of-bounds scores, bad names, bursts, read-only board) with throwaway anonymous users that are deleted after |
+| `node scripts/capture-marketing.mjs` | Populated marketing shots into `docs/marketing/web/` (needs `npm run start` on 3187). The sample leaderboard is a route stub inside that browser only |
+| `npm run sync` | Re-sync KL Web from kitchenlabs-kit (never edit `components/kl`, `lib/kl`, `styles/kl-tokens.css` here) |
+
+Heavy commands (build, Playwright) go through `kitchenlabs-kit/scripts/kl-slot.sh` on this Mac.
+Never poll the live site in a loop (Vercel bot protection blocks the IP); wait with
+`vercel inspect <url> --wait`.
+
+## Layout
+
+| Where | What |
+|---|---|
+| `lib/game/` | Engine (fixed 60 Hz step, `newGame`, touch `targetX`), spawner (injectable random), catalog (20 shop items, 4 aisles; points = half the price), scoring + `maxRoundScore`/`maxGameScore`/`minPlayMs`, power-ups, Penny's lines |
+| `components/game/` | `ThriftyGame` → `GameProvider` → `GameContainer` (screen state machine); `GameplayScreen`, `Playfield`, `Hud`, `ResultScreens`, `Leaderboard`, `TitleScreen` |
+| `hooks/` | `useKeyboard`, `useGameEngine` (engine created once; pointer target in a ref), `usePenny` |
+| `lib/leaderboard.ts` | `fetchLeaderboard`, `submitScore`, name rules, error → plain sentence. Never throws |
+| `supabase/migrations/20260929143000_thrifty_init.sql` | Tables, RLS, grants, trigger, `submit_score`. Applied through the Management API |
+| `app/` | `/` (the game), `/leaderboard`, icon, OG card, manifest, robots, sitemap, error and 404 |
+
+## Leaderboard (shared Supabase, schema `thrifty`)
+
+- Schema and PostgREST exposure: `kitchenlabs-kit/supabase/migrations/20260929140000_thrifty_schema.sql`
+  (the lead's). Tables: this repo's migration. **Never `supabase db push`**; apply with
+  `POST https://api.supabase.com/v1/projects/ikjfiytqbqpquyvoskcm/database/query` and the token in
+  `kitchenlabs-kit/.env`. The migration is idempotent; re-running it is safe.
+- `profiles` (gateway; anonymous players may create their own: Thrifty has no other kind of
+  player, a deliberate exception to the "block guest profiles" rule), `scores`, `blocked_words`.
+- Public read = column grants: `id, display_name, score, created_at` only. `user_id` is never
+  readable by clients. No update or delete by anyone but the service role.
+- Writes: `thrifty.submit_score(p_display_name, p_score, p_rounds_cleared, p_play_ms)` as the
+  player's anonymous session (created on the first save only, never on page load; kept in
+  localStorage `thrifty-auth`). The `scores_before_insert` trigger (SECURITY DEFINER) sets
+  `created_at`, refuses blocked names (`thrifty:bad_name`), scores above `maxGameScore(rounds)` or
+  faster than `minPlayMs(rounds)` (`thrifty:implausible_score`), and more than 1 per 10 s
+  (`thrifty:too_fast`), 30 per 24 h (`thrifty:daily_limit`) or 200 per player (`thrifty:row_cap`),
+  under a per-player advisory lock so parallel bursts can't slip through.
+- **Scores can't be fully cheat-proof**: the browser computes them. The database only refuses
+  what the game can't produce. The ceilings (334,972 for a full game) are loose on purpose: they
+  are true upper bounds (`lib/game/scoreCeiling.test.ts` fuzzes 20,000 rounds and checks the SQL
+  holds the same numbers).
+- The game never waits on Supabase: unreachable or unconfigured → "The board is taking a break".
+  supabase-js retries a failed read, so that message takes about 10 s to appear.
+- Env (Vercel, all environments, non-sensitive because they're public): `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_SUPABASE_SCHEMA=thrifty`. The service-role key is
+  only in `.env.local` for e2e cleanup; it is not on Vercel.
+
+## Gotchas (with root causes)
+
+- **Pointer capture ate the "Start round" click.** The play area called `setPointerCapture` on
+  every pointerdown, including presses on the round card's button inside it, so the click went to
+  the field. Now it ignores presses on buttons and doesn't steer when no handler is given
+  (`Playfield.test.tsx`).
+- **A Playwright fake clock (`page.clock`) leaves Motion's entrance animations at opacity 0.**
+  Only a test artifact (real browsers with or without Reduce Motion are fine); the marketing
+  capture runs in real time for that reason.
+- **Vercel CLI 56 stores Production/Preview vars as sensitive by default**, which `vercel env pull`
+  then reads back as empty. The public Supabase values are added with `--no-sensitive` so they
+  can be verified.
+- **`vercel link` rewrites `.env.local`** with the project's development env. Re-create it from
+  `.env.example` and `kitchenlabs-kit/.env` afterwards.
+- jsdom has no `PointerEvent` or `ResizeObserver`; the component tests polyfill them.
+
+## Status (2026-09-29)
+
+See the release report; numbers are refreshed below after each release.
 
 ## Regression baseline (captured 2026-09-29, before the web-release work)
+
+Kept as the record of what the hackathon build did. Every rule below still holds, except the
+fixed bugs listed under "Known problems" and the portrait field.
 
 Live: https://thrifty-kappa.vercel.app (Vercel project `thrifty`, repo ArvindVivek/thrifty).
 Checked with one headless session against production; screenshots in the session scratchpad.
