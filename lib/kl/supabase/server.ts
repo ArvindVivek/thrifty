@@ -1,4 +1,4 @@
-// KL Web 1.0.1, from kitchenlabs-kit/web/kl-web/lib/supabase/server.ts. Kit-owned: change it in the kit, then run scripts/sync-web-kit.sh.
+// KL Web 1.0.2, from kitchenlabs-kit/web/kl-web/lib/supabase/server.ts. Kit-owned: change it in the kit, then run scripts/sync-web-kit.sh.
 // Server Supabase client that acts as the caller, so RLS applies (from
 // templates/supabase-admin.ts). Route handlers and server components only.
 // The service-role client is in admin.ts.
