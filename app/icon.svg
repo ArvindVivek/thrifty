@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Thrifty: a price tag on a bargain-lime tile. The glyph is lucide's "tag" (ISC), filled,
+       in the dark olive ink (lime is too light for a white glyph). -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B5D62A"/>
+      <stop offset="1" stop-color="#86A80F"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#g)"/>
+  <g transform="translate(4.4 4.4) scale(0.97)">
+    <path fill="#1E2605" fill-rule="evenodd" d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z M7.5 5.5a2 2 0 1 0 0 4a2 2 0 1 0 0-4z"/>
+  </g>
+</svg>

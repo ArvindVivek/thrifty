@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Thrifty
 
-## Getting Started
+A quick arcade shopping game: things fall from the shelves, each with a price. Catch five before
+the clock runs out without going over budget. Three rounds, a public leaderboard, phone and
+desktop, light and dark.
 
-First, run the development server:
+Live: https://thrifty-kappa.vercel.app. Made by Kitchen Labs; first built at the Cloud9 x
+JetBrains 2026 hackathon.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # fill in the anon key (and the service-role key for e2e cleanup)
+npm install
+npm run dev                  # http://localhost:3187
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without the Supabase values the game still works; the leaderboard shows a friendly "can't be
+reached" message.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run gate      # kit check, typecheck, eslint (0 warnings), vitest, build, leak-check
+npm run e2e       # Playwright on the production build: phone + desktop (run build first)
+npm run e2e:live  # against production: routes, secrets, a real round trip, the database rules
+node scripts/capture-marketing.mjs   # populated marketing shots (needs npm run start)
+```
 
-## Learn More
+## How it fits together
 
-To learn more about Next.js, take a look at the following resources:
+| Where | What |
+|---|---|
+| `lib/game/` | The game: engine (fixed 60 Hz step), spawner, shop catalog, scoring and the score ceiling, power-ups, Penny's lines. Pure TypeScript, tested |
+| `components/game/` | Screens: title, the game (HUD, play area, cart), round and game-over cards, leaderboard |
+| `hooks/` | Keyboard, the engine hook (with touch steering), Penny's timing |
+| `lib/leaderboard.ts` | Reads the board and saves a score as an anonymous player; fails soft |
+| `supabase/migrations/` | The `thrifty` schema's tables, RLS and every rule a score must pass |
+| `components/kl`, `lib/kl`, `styles/kl-tokens.css` | KL Web, vendored from kitchenlabs-kit (don't edit here) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+See `CLAUDE.md` for the operating manual, `DESIGN.md` for colours and motion, `docs/PRIVACY.md`
+and `docs/SUPPORT.md` for the public pages, and `docs/CREDITS.md` for licences.

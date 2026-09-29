@@ -1,0 +1,122 @@
+[
+  {
+    "viewport": "desktop",
+    "theme": "light",
+    "name": "01-title",
+    "file": "desktop-light/01-title.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "dark",
+    "name": "01-title",
+    "file": "desktop-dark/01-title.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "light",
+    "name": "02-gameplay",
+    "file": "desktop-light/02-gameplay.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "dark",
+    "name": "02-gameplay",
+    "file": "desktop-dark/02-gameplay.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "light",
+    "name": "03-round-complete",
+    "file": "desktop-light/03-round-complete.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "dark",
+    "name": "03-round-complete",
+    "file": "desktop-dark/03-round-complete.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "light",
+    "name": "04-game-over",
+    "file": "desktop-light/04-game-over.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "dark",
+    "name": "04-game-over",
+    "file": "desktop-dark/04-game-over.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "light",
+    "name": "05-leaderboard",
+    "file": "desktop-light/05-leaderboard.png"
+  },
+  {
+    "viewport": "desktop",
+    "theme": "dark",
+    "name": "05-leaderboard",
+    "file": "desktop-dark/05-leaderboard.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "light",
+    "name": "01-title",
+    "file": "phone-light/01-title.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "dark",
+    "name": "01-title",
+    "file": "phone-dark/01-title.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "light",
+    "name": "02-gameplay",
+    "file": "phone-light/02-gameplay.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "dark",
+    "name": "02-gameplay",
+    "file": "phone-dark/02-gameplay.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "light",
+    "name": "03-round-complete",
+    "file": "phone-light/03-round-complete.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "dark",
+    "name": "03-round-complete",
+    "file": "phone-dark/03-round-complete.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "light",
+    "name": "04-game-over",
+    "file": "phone-light/04-game-over.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "dark",
+    "name": "04-game-over",
+    "file": "phone-dark/04-game-over.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "light",
+    "name": "05-leaderboard",
+    "file": "phone-light/05-leaderboard.png"
+  },
+  {
+    "viewport": "phone",
+    "theme": "dark",
+    "name": "05-leaderboard",
+    "file": "phone-dark/05-leaderboard.png"
+  }
+]
