@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Unit tests for useKeyboard hook
  *
@@ -11,8 +12,9 @@
  * - preventDefault called for arrow keys only
  */
 
+import { describe, expect, it, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useKeyboard } from '../useKeyboard';
+import { useKeyboard } from './useKeyboard';
 
 describe('useKeyboard', () => {
   // Helper to dispatch keyboard events
@@ -23,7 +25,7 @@ describe('useKeyboard', () => {
       cancelable: true,
     });
     // Spy on preventDefault
-    jest.spyOn(event, 'preventDefault');
+    vi.spyOn(event, 'preventDefault');
     window.dispatchEvent(event);
     return event;
   }
@@ -130,8 +132,8 @@ describe('useKeyboard', () => {
 
   describe('event listener cleanup', () => {
     it('should remove event listeners on unmount', () => {
-      const addEventListenerSpy = jest.spyOn(window, 'addEventListener');
-      const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener');
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
       const { unmount } = renderHook(() => useKeyboard());
 

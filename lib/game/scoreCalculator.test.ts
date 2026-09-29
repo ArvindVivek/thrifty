@@ -5,14 +5,13 @@
  * Following REQUIREMENTS.md scoring specifications exactly.
  */
 
+import { describe, expect, it } from 'vitest';
 import {
   calculateRoundScore,
   detectCombos,
   getRankTitle,
-  ComboBonus,
-  ScoreResult,
-} from '../scoreCalculator';
-import { FallingItem } from '../types';
+} from './scoreCalculator';
+import { FallingItem } from './types';
 
 // Helper to create mock items
 const createMockItem = (
@@ -49,9 +48,9 @@ describe('scoreCalculator', () => {
 
     it('should calculate item values correctly', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'shield', 80, 200),
-        createMockItem('3', 'utility', 50, 150),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'style', 80, 200),
+        createMockItem('3', 'snack', 50, 150),
         null,
         null,
       ];
@@ -80,11 +79,11 @@ describe('scoreCalculator', () => {
   describe('detectCombos - Individual Combos', () => {
     it('should detect Perfect Budget combo (exactly 0 remaining)', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'weapon', 100, 250),
-        createMockItem('3', 'weapon', 100, 250),
-        createMockItem('4', 'weapon', 100, 250),
-        createMockItem('5', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'home', 100, 250),
+        createMockItem('3', 'home', 100, 250),
+        createMockItem('4', 'home', 100, 250),
+        createMockItem('5', 'home', 100, 250),
       ];
       const combos = detectCombos(slots, 0, 500, 30000);
 
@@ -94,28 +93,28 @@ describe('scoreCalculator', () => {
       });
     });
 
-    it('should detect Balanced Loadout combo (3+ categories)', () => {
+    it('should detect Balanced Cart combo (3+ categories)', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'shield', 80, 200),
-        createMockItem('3', 'utility', 50, 150),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'style', 80, 200),
+        createMockItem('3', 'snack', 50, 150),
         null,
         null,
       ];
       const combos = detectCombos(slots, 500, 1000, 30000);
 
       expect(combos).toContainEqual({
-        name: 'Balanced Loadout',
+        name: 'Balanced Cart',
         multiplier: 1.2,
       });
     });
 
     it('should detect Specialist combo (4+ same category)', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'weapon', 100, 250),
-        createMockItem('3', 'weapon', 100, 250),
-        createMockItem('4', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'home', 100, 250),
+        createMockItem('3', 'home', 100, 250),
+        createMockItem('4', 'home', 100, 250),
         null,
       ];
       const combos = detectCombos(slots, 500, 1000, 30000);
@@ -128,7 +127,7 @@ describe('scoreCalculator', () => {
 
     it('should detect Speed Demon combo (15+ seconds remaining)', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
         null,
         null,
         null,
@@ -144,7 +143,7 @@ describe('scoreCalculator', () => {
 
     it('should detect Thrifty combo (50%+ budget remaining)', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
         null,
         null,
         null,
@@ -162,7 +161,7 @@ describe('scoreCalculator', () => {
   describe('calculateRoundScore - Combo Multipliers', () => {
     it('should apply Perfect Budget 2.0x multiplier', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 500, 250),
+        createMockItem('1', 'home', 500, 250),
         null,
         null,
         null,
@@ -178,18 +177,18 @@ describe('scoreCalculator', () => {
       expect(result.totalScore).toBe((500 + 250 + 0 + 0) * 2.0);
     });
 
-    it('should apply Balanced Loadout 1.2x multiplier', () => {
+    it('should apply Balanced Cart 1.2x multiplier', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'shield', 80, 200),
-        createMockItem('3', 'utility', 50, 150),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'style', 80, 200),
+        createMockItem('3', 'snack', 50, 150),
         null,
         null,
       ];
       const result = calculateRoundScore(slots, 400, 1000, 0, 1); // 40% budget (below 50% threshold)
 
       expect(result.combos).toContainEqual({
-        name: 'Balanced Loadout',
+        name: 'Balanced Cart',
         multiplier: 1.2,
       });
       expect(result.multiplier).toBe(1.2);
@@ -197,10 +196,10 @@ describe('scoreCalculator', () => {
 
     it('should apply Specialist 1.5x multiplier', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'weapon', 100, 250),
-        createMockItem('3', 'weapon', 100, 250),
-        createMockItem('4', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'home', 100, 250),
+        createMockItem('3', 'home', 100, 250),
+        createMockItem('4', 'home', 100, 250),
         null,
       ];
       const result = calculateRoundScore(slots, 400, 1000, 0, 1); // 40% budget (below 50% threshold)
@@ -213,13 +212,13 @@ describe('scoreCalculator', () => {
     });
 
     it('should stack multiple combos multiplicatively', () => {
-      // Perfect Budget (2.0x) + Balanced Loadout (1.2x) = 2.4x
+      // Perfect Budget (2.0x) + Balanced Cart (1.2x) = 2.4x
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 200, 250),
-        createMockItem('2', 'shield', 200, 200),
-        createMockItem('3', 'utility', 200, 150),
-        createMockItem('4', 'premium', 200, 400),
-        createMockItem('5', 'bonus', 200, 100),
+        createMockItem('1', 'home', 200, 250),
+        createMockItem('2', 'style', 200, 200),
+        createMockItem('3', 'snack', 200, 150),
+        createMockItem('4', 'tech', 200, 400),
+        createMockItem('5', 'snack', 200, 100),
       ];
       const result = calculateRoundScore(slots, 0, 1000, 0, 1);
 
@@ -232,11 +231,11 @@ describe('scoreCalculator', () => {
     it('should stack three combos multiplicatively', () => {
       // Perfect Budget (2.0x) + Speed Demon (1.3x) + Specialist (1.5x) = 3.9x
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 200, 250),
-        createMockItem('2', 'weapon', 200, 250),
-        createMockItem('3', 'weapon', 200, 250),
-        createMockItem('4', 'weapon', 200, 250),
-        createMockItem('5', 'weapon', 200, 250),
+        createMockItem('1', 'home', 200, 250),
+        createMockItem('2', 'home', 200, 250),
+        createMockItem('3', 'home', 200, 250),
+        createMockItem('4', 'home', 200, 250),
+        createMockItem('5', 'home', 200, 250),
       ];
       const result = calculateRoundScore(slots, 0, 1000, 15000, 1);
 
@@ -248,8 +247,8 @@ describe('scoreCalculator', () => {
   describe('calculateRoundScore - Failed Rounds', () => {
     it('should return 0 for budget bust', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'home', 100, 250),
         null,
         null,
         null,
@@ -267,9 +266,9 @@ describe('scoreCalculator', () => {
 
     it('should return 100 per filled slot for timeout', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'shield', 80, 200),
-        createMockItem('3', 'utility', 50, 150),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'style', 80, 200),
+        createMockItem('3', 'snack', 50, 150),
         null,
         null,
       ];
@@ -280,11 +279,11 @@ describe('scoreCalculator', () => {
 
     it('should return 100 per filled slot for all 5 slots timeout', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'shield', 80, 200),
-        createMockItem('3', 'utility', 50, 150),
-        createMockItem('4', 'premium', 200, 400),
-        createMockItem('5', 'bonus', 0, 100),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'style', 80, 200),
+        createMockItem('3', 'snack', 50, 150),
+        createMockItem('4', 'tech', 200, 400),
+        createMockItem('5', 'snack', 0, 100),
       ];
       const result = calculateRoundScore(slots, 500, 1000, 0, 1, 'timeout');
 
@@ -372,7 +371,7 @@ describe('scoreCalculator', () => {
 
     it('should handle 0 budget remaining with items', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 1000, 250),
+        createMockItem('1', 'home', 1000, 250),
         null,
         null,
         null,
@@ -389,7 +388,7 @@ describe('scoreCalculator', () => {
 
     it('should handle 0 time remaining', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
         null,
         null,
         null,
@@ -402,7 +401,7 @@ describe('scoreCalculator', () => {
 
     it('should not detect Thrifty with 49% budget remaining', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
         null,
         null,
         null,
@@ -417,7 +416,7 @@ describe('scoreCalculator', () => {
 
     it('should not detect Speed Demon with 14 seconds remaining', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
         null,
         null,
         null,
@@ -432,9 +431,9 @@ describe('scoreCalculator', () => {
 
     it('should not detect Specialist with only 3 same category', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'weapon', 100, 250),
-        createMockItem('3', 'weapon', 100, 250),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'home', 100, 250),
+        createMockItem('3', 'home', 100, 250),
         null,
         null,
       ];
@@ -445,18 +444,18 @@ describe('scoreCalculator', () => {
       );
     });
 
-    it('should not detect Balanced Loadout with only 2 categories', () => {
+    it('should not detect Balanced Cart with only 2 categories', () => {
       const slots: (FallingItem | null)[] = [
-        createMockItem('1', 'weapon', 100, 250),
-        createMockItem('2', 'weapon', 100, 250),
-        createMockItem('3', 'shield', 80, 200),
+        createMockItem('1', 'home', 100, 250),
+        createMockItem('2', 'home', 100, 250),
+        createMockItem('3', 'style', 80, 200),
         null,
         null,
       ];
       const combos = detectCombos(slots, 500, 1000, 30000);
 
       expect(combos).not.toContainEqual(
-        expect.objectContaining({ name: 'Balanced Loadout' })
+        expect.objectContaining({ name: 'Balanced Cart' })
       );
     });
   });

@@ -1,7 +1,7 @@
 /**
  * Core game state type definitions
  *
- * All game entities and state structures for THRIFTY.
+ * All game entities and state structures for Thrifty.
  */
 
 /**
@@ -23,14 +23,9 @@ export interface AABB {
 }
 
 /**
- * Item category types (legacy - kept for compatibility)
+ * Shop aisles. Combos count them: Balanced needs 3+ different aisles, Specialist 4+ from one.
  */
-export type ItemCategory = 'weapon' | 'shield' | 'utility' | 'premium' | 'bonus';
-
-/**
- * Valorant item category types
- */
-export type ValorantCategory = 'sidearm' | 'smg' | 'shotgun' | 'rifle' | 'sniper' | 'heavy' | 'shield';
+export type ItemCategory = 'snack' | 'style' | 'home' | 'tech';
 
 /**
  * Power-up types
@@ -67,11 +62,8 @@ export interface FallingItem extends AABB {
   velocityY: number;
   isPowerUp?: boolean; // true if this is a power-up instead of regular item
   powerUpType?: PowerUpType; // type of power-up if isPowerUp is true
-  // Valorant item properties
-  itemId?: string; // Valorant item ID (e.g., 'vandal', 'phantom')
-  itemName?: string; // Display name (e.g., 'Vandal', 'Phantom')
-  image?: string; // Path to item image
-  valorantCategory?: ValorantCategory; // Valorant-specific category
+  itemId?: string; // catalog id (e.g. 'laptop')
+  itemName?: string; // display name (e.g. 'Laptop')
 }
 
 /**
@@ -84,7 +76,7 @@ export interface Catcher extends AABB {
 /**
  * Game state machine states
  */
-export type GameStatus = 'menu' | 'playing' | 'round_complete' | 'round_failed' | 'game_over';
+export type GameStatus = 'menu' | 'playing' | 'round_complete' | 'game_over';
 
 /**
  * Complete game state
@@ -102,17 +94,20 @@ export interface GameState {
   lastScore?: import('./scoreCalculator').ScoreResult;
   totalScore: number;
   failReason?: 'bust' | 'timeout';
+  /** Milliseconds of actual play this game (only while a round is running). */
+  playTimeMs: number;
 }
 
 /**
- * Input state interface for game engine to query keyboard/controller state
+ * Input state interface for game engine to query keyboard/touch state
  *
  * This interface allows the game engine to poll input state without
- * coupling to specific input implementations (keyboard, gamepad, touch).
- * The useKeyboard hook implements this interface.
+ * coupling to specific input implementations (keyboard, touch).
  */
 export interface InputState {
   isKeyDown: (key: string) => boolean;
+  /** Where a finger or pointer wants the catcher's centre, in play-area pixels; null when idle. */
+  targetX?: () => number | null;
 }
 
 /**
@@ -126,17 +121,3 @@ export type GameEvent =
   | { type: 'round_failed'; reason: 'bust' | 'timeout' }
   | { type: 'combo_achieved'; combo: import('./scoreCalculator').ComboBonus }
   | { type: 'timer_warning' };
-
-/**
- * Leaderboard Types
- */
-
-/**
- * Leaderboard entry from Supabase thrifty.leaderboard table
- */
-export interface LeaderboardEntry {
-  id: string;
-  name: string;
-  score: number;
-  created_at: string;
-}

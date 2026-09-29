@@ -7,8 +7,9 @@
  * - isOffScreen: detecting items that have fallen below canvas
  */
 
-import { checkAABBCollision, findCollidingItems, isOffScreen } from '../collision';
-import type { AABB, Catcher, FallingItem } from '../types';
+import { describe, expect, it } from 'vitest';
+import { checkAABBCollision, findCollidingItems, isOffScreen } from './collision';
+import type { AABB, Catcher, FallingItem } from './types';
 
 describe('checkAABBCollision', () => {
   describe('overlapping boxes', () => {
@@ -99,7 +100,7 @@ describe('findCollidingItems', () => {
     y,
     width: 40,
     height: 40,
-    category: 'weapon',
+    category: 'home',
     cost: 100,
     value: 10,
     velocityY: 100,
@@ -167,7 +168,7 @@ describe('isOffScreen', () => {
     y,
     width: 40,
     height: 40,
-    category: 'weapon',
+    category: 'home',
     cost: 100,
     value: 10,
     velocityY: 100,

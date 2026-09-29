@@ -7,6 +7,7 @@
  */
 
 import type { GameState, PowerUpType, PowerUpEffect } from './types';
+import { BUDGET_CAP_MULTIPLIER, ROUND_CONFIG } from './constants';
 
 /**
  * Power-up configuration
@@ -54,7 +55,7 @@ export const POWER_UPS: Record<PowerUpType, PowerUpDefinition> = {
   score_multiplier: {
     type: 'score_multiplier',
     name: 'Score Multiplier',
-    duration: 0, // instant, applied to next catch
+    duration: 0, // lasts until the next catch (updatePowerUpEffects never expires it)
     dropRate: 3,
     isPositive: true,
   },
@@ -103,9 +104,11 @@ export function applyPowerUpEffect(state: GameState, powerUpType: PowerUpType): 
 
   // Handle instant effects
   switch (powerUpType) {
-    case 'budget_boost':
-      state.budget += 500;
+    case 'budget_boost': {
+      const startingBudget = ROUND_CONFIG[state.round - 1]?.budget ?? state.budget;
+      state.budget = Math.min(state.budget + 500, startingBudget * BUDGET_CAP_MULTIPLIER);
       break;
+    }
 
     case 'budget_drain':
       state.budget = Math.max(0, state.budget - 300);
@@ -115,7 +118,7 @@ export function applyPowerUpEffect(state: GameState, powerUpType: PowerUpType): 
       state.totalScore = Math.max(0, state.totalScore - 200);
       break;
 
-    case 'slot_lock':
+    case 'slot_lock': {
       // Lock a random empty slot
       const emptySlots = state.slots
         .map((slot, index) => (slot === null ? index : -1))
@@ -131,6 +134,7 @@ export function applyPowerUpEffect(state: GameState, powerUpType: PowerUpType): 
         });
       }
       break;
+    }
 
     case 'slow_motion':
     case 'speed_up':
@@ -152,6 +156,9 @@ export function applyPowerUpEffect(state: GameState, powerUpType: PowerUpType): 
 /**
  * Update all active power-up effects, decrementing duration
  *
+ * 2x Score has no timer: it waits for the next catch, which removes it. (In the hackathon build
+ * it had a 0 ms duration, so it expired on the next tick and never doubled anything.)
+ *
  * @param effects - Array of active power-up effects
  * @param deltaTime - Time elapsed in milliseconds
  * @returns Array of still-active effects (expired ones removed)
@@ -161,11 +168,15 @@ export function updatePowerUpEffects(
   deltaTime: number
 ): PowerUpEffect[] {
   return effects
-    .map((effect) => ({
-      ...effect,
-      duration: effect.duration - deltaTime,
-    }))
-    .filter((effect) => effect.duration > 0);
+    .map((effect) =>
+      effect.type === 'score_multiplier'
+        ? effect
+        : {
+            ...effect,
+            duration: effect.duration - deltaTime,
+          }
+    )
+    .filter((effect) => effect.type === 'score_multiplier' || effect.duration > 0);
 }
 
 /**

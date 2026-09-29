@@ -1,35 +1,37 @@
+// @vitest-environment jsdom
 /**
  * Unit tests for useGameEngine hook
  *
  * Tests cover:
- * - Engine is created once (stored in ref, not recreated on re-renders)
+ * - Engine is created once (not recreated on re-renders)
  * - Cleanup calls engine.stop() on unmount
  * - gameState updates when onStateChange callback is invoked
  */
 
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useGameEngine, UseGameEngineOptions } from '../useGameEngine';
-import { GameEngine } from '@/app/lib/GameEngine';
-import type { GameState, GameEvent } from '@/app/lib/types';
+import { useGameEngine, UseGameEngineOptions } from './useGameEngine';
+import { GameEngine } from '@/lib/game/GameEngine';
+import type { GameState, GameEvent } from '@/lib/game/types';
 
 // Mock useKeyboard - must be before GameEngine mock since both are imported
-const mockIsKeyDown = jest.fn(() => false);
-jest.mock('../useKeyboard', () => ({
-  useKeyboard: jest.fn(() => ({
+const { mockIsKeyDown } = vi.hoisted(() => ({ mockIsKeyDown: vi.fn(() => false) }));
+vi.mock('./useKeyboard', () => ({
+  useKeyboard: vi.fn(() => ({
     isKeyDown: mockIsKeyDown,
   })),
 }));
 
 // Mock GameEngine
-jest.mock('@/app/lib/GameEngine', () => {
+vi.mock('@/lib/game/GameEngine', () => {
   return {
-    GameEngine: jest.fn().mockImplementation((options) => {
+    GameEngine: vi.fn().mockImplementation((options) => {
       return {
-        start: jest.fn(),
-        stop: jest.fn(),
-        getState: jest.fn(() => options.initialState),
-        isRunning: jest.fn(() => false),
-        startRound: jest.fn(),
+        start: vi.fn(),
+        stop: vi.fn(),
+        getState: vi.fn(() => options.initialState),
+        isRunning: vi.fn(() => false),
+        startRound: vi.fn(),
         // Store callbacks for testing
         _onStateChange: options.onStateChange,
         _onGameEvent: options.onGameEvent,
@@ -51,12 +53,13 @@ function createInitialState(): GameState {
     totalScore: 0,
     status: 'menu',
     activePowerUps: [],
+    playTimeMs: 0,
   };
 }
 
 describe('useGameEngine', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('engine creation', () => {
@@ -92,7 +95,7 @@ describe('useGameEngine', () => {
 
     it('should pass initialState and onStateChange to GameEngine constructor', () => {
       const initialState = createInitialState();
-      const onGameEvent = jest.fn();
+      const onGameEvent = vi.fn();
 
       renderHook(() =>
         useGameEngine({
@@ -105,9 +108,12 @@ describe('useGameEngine', () => {
         expect.objectContaining({
           initialState,
           onStateChange: expect.any(Function),
-          onGameEvent,
+          // Forwarded through a ref so the engine always calls the latest callback
+          // ('should pass onGameEvent callback to engine' below proves it arrives)
+          onGameEvent: expect.any(Function),
           inputState: expect.objectContaining({
             isKeyDown: expect.any(Function),
+            targetX: expect.any(Function),
           }),
         })
       );
@@ -123,7 +129,7 @@ describe('useGameEngine', () => {
       renderHook(() => useGameEngine(options));
 
       // Get the mock engine instance
-      const mockEngine = (GameEngine as jest.Mock).mock.results[0].value;
+      const mockEngine = (GameEngine as unknown as Mock).mock.results[0].value;
 
       expect(mockEngine.start).toHaveBeenCalledTimes(1);
     });
@@ -136,7 +142,7 @@ describe('useGameEngine', () => {
       const { unmount } = renderHook(() => useGameEngine(options));
 
       // Get the mock engine instance
-      const mockEngine = (GameEngine as jest.Mock).mock.results[0].value;
+      const mockEngine = (GameEngine as unknown as Mock).mock.results[0].value;
 
       // stop() should not have been called yet
       expect(mockEngine.stop).not.toHaveBeenCalled();
@@ -172,7 +178,7 @@ describe('useGameEngine', () => {
       );
 
       // Get the mock engine instance
-      const mockEngine = (GameEngine as jest.Mock).mock.results[0].value;
+      const mockEngine = (GameEngine as unknown as Mock).mock.results[0].value;
 
       // Simulate state change from engine
       const newState: GameState = {
@@ -196,7 +202,7 @@ describe('useGameEngine', () => {
       const initialState = createInitialState();
       let renderCount = 0;
 
-      const { result } = renderHook(() => {
+      renderHook(() => {
         renderCount++;
         return useGameEngine({
           initialState,
@@ -206,7 +212,7 @@ describe('useGameEngine', () => {
       const initialRenderCount = renderCount;
 
       // Get the mock engine instance
-      const mockEngine = (GameEngine as jest.Mock).mock.results[0].value;
+      const mockEngine = (GameEngine as unknown as Mock).mock.results[0].value;
 
       // Simulate state change from engine
       act(() => {
@@ -253,7 +259,7 @@ describe('useGameEngine', () => {
 
   describe('event handling', () => {
     it('should pass onGameEvent callback to engine', () => {
-      const onGameEvent = jest.fn();
+      const onGameEvent = vi.fn();
 
       renderHook(() =>
         useGameEngine({
@@ -263,7 +269,7 @@ describe('useGameEngine', () => {
       );
 
       // Get the mock engine instance
-      const mockEngine = (GameEngine as jest.Mock).mock.results[0].value;
+      const mockEngine = (GameEngine as unknown as Mock).mock.results[0].value;
 
       // Simulate game event
       const event: GameEvent = { type: 'budget_warning' };
@@ -291,6 +297,23 @@ describe('useGameEngine', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('touch steering', () => {
+    it('should hand the pointer target to the engine through inputState.targetX', () => {
+      const { result } = renderHook(() =>
+        useGameEngine({
+          initialState: createInitialState(),
+        })
+      );
+      const options = (GameEngine as unknown as Mock).mock.calls[0][0];
+
+      expect(options.inputState.targetX()).toBeNull();
+      act(() => result.current.setPointerTarget(123));
+      expect(options.inputState.targetX()).toBe(123);
+      act(() => result.current.setPointerTarget(null));
+      expect(options.inputState.targetX()).toBeNull();
     });
   });
 });

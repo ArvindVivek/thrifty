@@ -7,30 +7,31 @@
  * - Catcher position updates based on velocity
  */
 
-import { GameEngine } from '../GameEngine';
-import type { GameState, InputState } from '../types';
-import { CATCHER_SPEED, CANVAS_WIDTH, CATCHER_WIDTH, PHYSICS_DT } from '../constants';
+import { afterEach, beforeAll, describe, expect, it, vi, type Mock } from 'vitest';
+import { GameEngine } from './GameEngine';
+import type { GameState, InputState } from './types';
+import { CATCHER_SPEED, CANVAS_WIDTH, CATCHER_WIDTH, PHYSICS_DT } from './constants';
 
 // Mock requestAnimationFrame and cancelAnimationFrame for node environment
 let rafCallback: ((time: number) => void) | null = null;
 let rafId = 0;
 
 beforeAll(() => {
-  global.requestAnimationFrame = jest.fn((callback: FrameRequestCallback) => {
+  globalThis.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
     rafCallback = callback;
     rafId++;
     return rafId;
   });
 
-  global.cancelAnimationFrame = jest.fn((id: number) => {
+  globalThis.cancelAnimationFrame = vi.fn(() => {
     rafCallback = null;
   });
 
   // Mock performance.now
-  if (!global.performance) {
-    global.performance = {} as Performance;
+  if (!globalThis.performance) {
+    globalThis.performance = {} as Performance;
   }
-  global.performance.now = jest.fn(() => Date.now());
+  globalThis.performance.now = vi.fn(() => Date.now());
 });
 
 afterEach(() => {
@@ -72,6 +73,7 @@ function createInitialState(): GameState {
     totalScore: 0,
     status: 'menu',
     activePowerUps: [],
+    playTimeMs: 0,
   };
 }
 
@@ -386,20 +388,20 @@ describe('GameEngine', () => {
 
     it('should not start twice', () => {
       // Clear RAF mock to get accurate count for this test
-      (global.requestAnimationFrame as jest.Mock).mockClear();
+      (globalThis.requestAnimationFrame as Mock).mockClear();
 
       const engine = new GameEngine({
         initialState: createInitialState(),
       });
 
       engine.start();
-      const callsAfterFirstStart = (global.requestAnimationFrame as jest.Mock).mock.calls.length;
+      const callsAfterFirstStart = (globalThis.requestAnimationFrame as Mock).mock.calls.length;
 
       engine.start(); // Should be a no-op
 
       expect(engine.isRunning()).toBe(true);
       // Should not have called RAF again
-      expect((global.requestAnimationFrame as jest.Mock).mock.calls.length).toBe(callsAfterFirstStart);
+      expect((globalThis.requestAnimationFrame as Mock).mock.calls.length).toBe(callsAfterFirstStart);
 
       engine.stop();
     });

@@ -7,7 +7,7 @@
  * - Delta time capping to prevent spiral of death
  */
 
-import type { GameState, FallingItem, GameEvent, InputState } from './types';
+import type { GameState, GameEvent, InputState } from './types';
 import {
   PHYSICS_DT,
   MAX_FRAME_TIME,
@@ -17,9 +17,10 @@ import {
   CATCHER_SPEED,
   ROUND_CONFIG,
   TOTAL_ROUNDS,
+  POWER_UP_SPAWN_CHANCE,
 } from './constants';
 import { findCollidingItems, isOffScreen } from './collision';
-import { ItemSpawner } from './itemSpawner';
+import { ItemSpawner, type Random } from './itemSpawner';
 import { calculateRoundScore } from './scoreCalculator';
 import {
   updatePowerUpEffects,
@@ -37,6 +38,8 @@ interface GameEngineOptions {
   inputState?: InputState; // Optional for backward compatibility with existing tests
   onStateChange?: (state: GameState) => void;
   onGameEvent?: (event: GameEvent) => void;
+  /** Random source for spawns and power-ups (tests pass a seeded one). */
+  random?: Random;
 }
 
 export class GameEngine {
@@ -53,6 +56,7 @@ export class GameEngine {
   private gameTime: number = 0;
   private budgetWarningEmitted: boolean = false;
   private timerWarningEmitted: boolean = false;
+  private random: Random;
 
   /**
    * Create a new GameEngine instance
@@ -67,6 +71,7 @@ export class GameEngine {
     this.inputState = options.inputState ?? null;
     this.onStateChange = options.onStateChange;
     this.onGameEvent = options.onGameEvent;
+    this.random = options.random ?? Math.random;
   }
 
   /**
@@ -115,11 +120,22 @@ export class GameEngine {
   }
 
   /**
+   * Start a fresh game from round 1: clears the previous game's total, last round score and
+   * play time. (Play Again used to call startRound(1), which kept the old total.)
+   */
+  newGame(): void {
+    this.gameState.totalScore = 0;
+    this.gameState.lastScore = undefined;
+    this.gameState.playTimeMs = 0;
+    this.startRound(1);
+  }
+
+  /**
    * Start a new round
    *
    * Resets all state for the specified round number
    *
-   * @param roundNumber - Round number (1-5)
+   * @param roundNumber - Round number (1-3)
    */
   startRound(roundNumber: number): void {
     const roundConfig = ROUND_CONFIG[roundNumber - 1];
@@ -142,7 +158,7 @@ export class GameEngine {
     this.gameState.round = roundNumber;
 
     // Create new ItemSpawner
-    this.itemSpawner = new ItemSpawner(roundNumber);
+    this.itemSpawner = new ItemSpawner(roundNumber, this.random);
 
     // Reset power-ups
     this.gameState.activePowerUps = [];
@@ -260,17 +276,22 @@ export class GameEngine {
     }
 
     // ===== Input Processing =====
-    // Read keyboard input and set catcher velocity
+    // Read keyboard (or touch) input and set catcher velocity
     // Must be done FIRST so velocity is ready for position update
     if (this.inputState) {
       const moveLeft = this.inputState.isKeyDown('ArrowLeft');
       const moveRight = this.inputState.isKeyDown('ArrowRight');
+      const target = this.inputState.targetX?.() ?? null;
 
       let velocityX = 0;
       if (moveLeft && !moveRight) {
         velocityX = -CATCHER_SPEED;
       } else if (moveRight && !moveLeft) {
         velocityX = CATCHER_SPEED;
+      } else if (target !== null) {
+        // Head for the finger at the same top speed as the keys, without overshooting it
+        const distance = target - (this.gameState.catcher.x + CATCHER_WIDTH / 2);
+        velocityX = Math.max(-CATCHER_SPEED, Math.min(CATCHER_SPEED, distance / dtSeconds));
       }
 
       this.gameState.catcher.velocityX = velocityX;
@@ -278,6 +299,7 @@ export class GameEngine {
 
     // Increment game time
     this.gameTime += dt;
+    this.gameState.playTimeMs += dt;
 
     // ===== a) Update power-up durations =====
     this.gameState.activePowerUps = updatePowerUpEffects(this.gameState.activePowerUps, dt);
@@ -289,14 +311,14 @@ export class GameEngine {
       const newItem = this.itemSpawner.update(this.gameTime, this.gameState.round, this.gameState.budget);
 
       if (newItem) {
-        // 26% chance to spawn power-up instead of regular item
-        if (Math.random() < 0.26) {
+        // Some spawns are power-ups instead of regular items
+        if (this.random() < POWER_UP_SPAWN_CHANCE) {
           // Select random power-up weighted by drop rates
           const powerUpTypes = Object.keys(POWER_UPS) as PowerUpType[];
           const weights = powerUpTypes.map((type) => POWER_UPS[type].dropRate);
           const totalWeight = weights.reduce((sum, w) => sum + w, 0);
 
-          let random = Math.random() * totalWeight;
+          let random = this.random() * totalWeight;
           let selectedPowerUp: PowerUpType = 'slow_motion';
 
           for (let i = 0; i < powerUpTypes.length; i++) {
