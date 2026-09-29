@@ -81,9 +81,22 @@ Never poll the live site in a loop (Vercel bot protection blocks the IP); wait w
   `.env.example` and `kitchenlabs-kit/.env` afterwards.
 - jsdom has no `PointerEvent` or `ResizeObserver`; the component tests polyfill them.
 
-## Status (2026-09-29)
+## Status (2026-09-29, web release)
 
-See the release report; numbers are refreshed below after each release.
+- Production: deployment `dpl_6swaSfzdubj6xJq94YPvQW2p8HHg` (merge commit 3527909), aliased to
+  thrifty-kappa.vercel.app.
+- Gate: KL Web 1.0.1 current, typecheck clean, eslint 0 warnings, vitest **291/291** (14 files),
+  build OK (10 routes, all static), leak-check clean.
+- e2e on the production build: **12/12** (6 tests x phone + desktop), including real games saved
+  to the shared Supabase and cleaned up.
+- Live (`npm run e2e:live`): **7/7**: routes, no secrets in 16+ JS files, a real round trip as a
+  throwaway anonymous player (deleted after), and the database rule proofs.
+- The live board is empty ("Be the first on the board"); nothing fake was ever written to it.
+- Marketing: `docs/marketing/web/{desktop,phone}-{light,dark}/01-05` (title, gameplay, round
+  cleared, game over, leaderboard with sample rows stubbed in the capture browser only).
+- Owner-only: register `brand/thrifty/palette.json` (block in the release report) and publish
+  `docs/PRIVACY.md` / `docs/SUPPORT.md` on the studio site at `/apps/thrifty/privacy` and
+  `/apps/thrifty/support` (the footer links point there).
 
 ## Regression baseline (captured 2026-09-29, before the web-release work)
 
