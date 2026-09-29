@@ -1,0 +1,14 @@
+{
+  "app": "thrifty",
+  "baseUrl": "https://thrifty-kappa.vercel.app",
+  "out": "web-static",
+  "themes": ["light", "dark"],
+  "themeStrategy": "media",
+  "viewports": ["desktop", "phone"],
+  "shots": [
+    { "name": "01-title", "path": "/", "waitFor": "text=Start game" },
+    { "name": "02-how-to-play", "path": "/", "steps": [{ "scroll": 700 }, { "wait": 400 }], "waitFor": "text=How to play" },
+    { "name": "03-ready", "path": "/", "steps": [{ "click": "text=Start game" }, { "wait": 600 }], "waitFor": "text=Start round" }
+  ],
+  "_why": "The kit tool (kitchenlabs-kit/tools/capture/capture-web.mjs) covers the static screens. It can't play a game or stub the leaderboard, so the populated gameplay, round, game-over and leaderboard shots come from scripts/capture-marketing.mjs into docs/marketing/web/ (the sample board lives only in that script's browser)."
+}
