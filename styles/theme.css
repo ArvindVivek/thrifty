@@ -1,0 +1,23 @@
+/* Thrifty accent: "bargain lime". Web-only app, so the palette was derived here with the script
+   in kitchenlabs-kit/docs/brand/palettes.md (proposed as brand/thrifty/palette.json; the lead
+   registers it). This file is yours: the sync script never overwrites it.
+
+   Lime is a light colour: white on it is 1.97:1, so buttons carry a dark olive ink (7.98:1) and
+   the raw lime never carries text or thin icons on a light ground (1.79:1 on --bg). Accent text
+   is the darkened #60750C (4.72:1 on --bg, 5.19:1 on white, 4.73:1 on the soft tint). Every
+   pair is measured by lib/tokens.test.ts. CIEDE2000 distance to the nearest app accent: 19.1
+   (ChessAI #57963A), checked with tools/brand/accent-distance.py. */
+
+:root {
+  --accent: #a3c614;
+  --accent-strong: #a3c614;
+  --accent-deep: #758f0e;
+  --accent-text: #60750c;
+  --accent-soft: #f2f7de;
+  --on-accent: #1e2605;
+}
+
+[data-theme="dark"] {
+  --accent-text: #a3c614;
+  --accent-soft: #344024;
+}
