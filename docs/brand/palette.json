@@ -1,0 +1,19 @@
+{
+  "app": "thrifty",
+  "displayName": "Thrifty",
+  "appearance": "adaptive",
+  "accent": "#A3C614",
+  "accentStrong": "#A3C614",
+  "accentDeep": "#758F0E",
+  "accentSoft": "#F2F7DE",
+  "accentSoftDark": "#344024",
+  "onAccent": "#1E2605",
+  "accentText": "#60750C",
+  "accentTextDark": "#A3C614",
+  "secondary": null,
+  "gradient": [
+    "#B5D62A",
+    "#86A80F"
+  ],
+  "night": null
+}
