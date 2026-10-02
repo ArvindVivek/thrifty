@@ -1,4 +1,4 @@
-// KL Web 1.0.2, from kitchenlabs-kit/web/kl-web/lib/supabase/browser.ts. Kit-owned: change it in the kit, then run scripts/sync-web-kit.sh.
+// KL Web 1.0.3, from kitchenlabs-kit/web/kl-web/lib/supabase/browser.ts. Kit-owned: change it in the kit, then run scripts/sync-web-kit.sh.
 // Browser Supabase client for a Kitchen Labs web app (from templates/supabase-browser.ts).
 //
 // Uses only public values: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY and
