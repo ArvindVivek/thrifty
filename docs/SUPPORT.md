@@ -1,6 +1,6 @@
 # Thrifty Support
 
-Need help? Email **arvind.vivekk@gmail.com**. We usually reply within two days.
+Need help? Send us a message through [our contact page](https://kitchenlabs-one.vercel.app/contact). We usually reply within two days.
 
 ## Common questions
 
@@ -34,7 +34,8 @@ connection and try again. The game itself always works, even when the leaderboar
 reached.
 
 **Can I change or delete my score?**
-Not from the game. Email us the name and roughly when you saved it, and we'll remove it.
+Not from the game. Send us the name and roughly when you saved it through
+[our contact page](https://kitchenlabs-one.vercel.app/contact), and we'll remove it.
 
 **Can I play on my phone?**
 Yes. Hold your phone upright and drag on the play area to move the cart.

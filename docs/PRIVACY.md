@@ -48,8 +48,9 @@ data. We don't ask for your email, location, contacts or photos.
 
 ## Removing a score
 
-Scores can't be edited or removed from the game itself. To have your scores removed, email us the
-name you used and roughly when you saved them, and we'll delete them. Clearing your browser's site
+Scores can't be edited or removed from the game itself. To have your scores removed, send us the
+name you used and roughly when you saved them through [our contact page](https://kitchenlabs-one.vercel.app/contact), and we'll
+delete them. Clearing your browser's site
 data forgets the anonymous session; your saved scores stay on the board until we remove them.
 
 ## Children
@@ -59,5 +60,5 @@ from them. The only thing it stores is what a player types into the leaderboard 
 
 ## Changes and contact
 
-If this policy changes, we'll update the date above. Questions:
-**arvind.vivekk@gmail.com**.
+If this policy changes, we'll update the date above. Questions? Send
+them through [our contact page](https://kitchenlabs-one.vercel.app/contact).

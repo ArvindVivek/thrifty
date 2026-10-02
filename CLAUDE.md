@@ -158,3 +158,10 @@ Jest, 8 files, 140 test cases. **129 ran: 111 pass, 18 fail; 3 of 8 suites fail*
 - `GameContext.test.tsx`: 1 failure, expects the old 1000 px canvas.
 - `GameContainer.test.tsx`: the suite can't load (`bad-words` ships ESM Jest can't parse), so
   its 11 tests never ran.
+
+## Owner sweep (2026-10-02)
+- KL Web 1.0.3. The studio credit is "© 2026 Kitchen Labs" (`COPYRIGHT`), never "Made by"; e2e
+  matches `/© \d{4} Kitchen Labs/` so the year can roll over. No email address anywhere in the app
+  or its docs: `docs/PRIVACY.md` and `docs/SUPPORT.md` link https://kitchenlabs-one.vercel.app/contact.
+- Scroll audit at 1280x800, 1440x900, 430x932: Start game is in view on the landing page and the
+  whole play area fits once a game starts. No layout change.
