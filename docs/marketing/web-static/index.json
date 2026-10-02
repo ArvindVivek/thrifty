@@ -1,0 +1,103 @@
+{
+  "app": "thrifty",
+  "baseUrl": "https://thrifty-kappa.vercel.app",
+  "captured": "2026-10-02T22:00:14.124Z",
+  "shots": [
+    {
+      "viewport": "desktop",
+      "theme": "light",
+      "name": "01-title",
+      "file": "desktop-light/01-title.png",
+      "px": "2880x1800",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "desktop",
+      "theme": "light",
+      "name": "02-how-to-play",
+      "file": "desktop-light/02-how-to-play.png",
+      "px": "2880x1800",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "desktop",
+      "theme": "light",
+      "name": "03-ready",
+      "file": "desktop-light/03-ready.png",
+      "px": "2880x1800",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "desktop",
+      "theme": "dark",
+      "name": "01-title",
+      "file": "desktop-dark/01-title.png",
+      "px": "2880x1800",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "desktop",
+      "theme": "dark",
+      "name": "02-how-to-play",
+      "file": "desktop-dark/02-how-to-play.png",
+      "px": "2880x1800",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "desktop",
+      "theme": "dark",
+      "name": "03-ready",
+      "file": "desktop-dark/03-ready.png",
+      "px": "2880x1800",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "phone",
+      "theme": "light",
+      "name": "01-title",
+      "file": "phone-light/01-title.png",
+      "px": "1290x2796",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "phone",
+      "theme": "light",
+      "name": "02-how-to-play",
+      "file": "phone-light/02-how-to-play.png",
+      "px": "1290x2796",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "phone",
+      "theme": "light",
+      "name": "03-ready",
+      "file": "phone-light/03-ready.png",
+      "px": "1290x2796",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "phone",
+      "theme": "dark",
+      "name": "01-title",
+      "file": "phone-dark/01-title.png",
+      "px": "1290x2796",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "phone",
+      "theme": "dark",
+      "name": "02-how-to-play",
+      "file": "phone-dark/02-how-to-play.png",
+      "px": "1290x2796",
+      "consoleErrors": 0
+    },
+    {
+      "viewport": "phone",
+      "theme": "dark",
+      "name": "03-ready",
+      "file": "phone-dark/03-ready.png",
+      "px": "1290x2796",
+      "consoleErrors": 0
+    }
+  ]
+}
