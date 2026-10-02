@@ -4,7 +4,7 @@ A quick arcade shopping game: things fall from the shelves, each with a price. C
 the clock runs out without going over budget. Three rounds, a public leaderboard, phone and
 desktop, light and dark.
 
-Live: https://thrifty-kappa.vercel.app. Made by Kitchen Labs; first built at the Cloud9 x
+Live: https://thrifty-kappa.vercel.app. © 2026 Kitchen Labs; first built at the Cloud9 x
 JetBrains 2026 hackathon.
 
 ## Run it

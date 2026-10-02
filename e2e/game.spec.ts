@@ -57,6 +57,7 @@ test("title screen explains the game and makes no Supabase calls on load", async
   await expect(page.getByRole("heading", { name: "How to play" })).toBeVisible();
   await expect(page.getByText("Perfect Budget").first()).toBeVisible();
   await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute("href", /\/apps\/thrifty\/privacy$/);
+  await expect(page.getByText(/© \d{4} Kitchen Labs/)).toBeVisible();
   await expect(page.getByRole("link", { name: "Support" })).toHaveAttribute("href", /\/apps\/thrifty\/support$/);
   await page.waitForLoadState("networkidle");
 

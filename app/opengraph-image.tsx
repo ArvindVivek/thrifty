@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { COPYRIGHT } from "@/components/kl/PageShell";
 import { site } from "@/lib/site";
 
 // The link-preview card (docs/web/seo-and-icons.md, step 4). Satori renders it: flexbox only,
@@ -56,7 +57,7 @@ function Card({ title, sentence, art }: { title: string; sentence: string; art: 
             ))}
           </div>
         )}
-        <div style={{ display: "flex", fontSize: 26, color: c.ink2, marginTop: 40 }}>Made by Kitchen Labs</div>
+        <div style={{ display: "flex", fontSize: 26, color: c.ink2, marginTop: 40 }}>{COPYRIGHT}</div>
       </div>
       {art && (
         <div
