@@ -17,7 +17,7 @@ standard (`kitchenlabs-kit/docs/standards/web-release-standard.md`) on 2026-09-2
 | Command | What |
 |---|---|
 | `npm run dev` | Dev server on port 3187 |
-| `npm run gate` | Kit check, typecheck, eslint (0 warnings), vitest, build, leak-check. Must pass before any push |
+| `npm run gate` | Kit check, typecheck, eslint (0 warnings), vitest, build, leak-check (secrets, plus the AI vendor or a model id in client JS or rendered pages: users only ever see "AI"). Must pass before any push |
 | `npm run e2e` | Playwright on the production build (build first): phone + desktop, server TZ=UTC, browser America/Los_Angeles, no console errors. Plays real games through the UI and saves a score to the shared Supabase, then deletes the test users with the service role and proves nothing is left |
 | `npm run e2e:live` | Against production: routes, no secrets in the JS, a real round trip, and the database rule proofs (out-of-bounds scores, bad names, bursts, read-only board) with throwaway anonymous users that are deleted after |
 | `node scripts/capture-marketing.mjs` | Populated marketing shots into `docs/marketing/web/` (needs `npm run start` on 3187). The sample leaderboard is a route stub inside that browser only |
